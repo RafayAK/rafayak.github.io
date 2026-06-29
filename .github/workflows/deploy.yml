@@ -20,10 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: withastro/action@v3
-        # If you keep the repo name `rafayak.github.com`, uncomment to set the base:
-        # with:
-        #   path: .
-        #   node-version: 22
+        with:
+          node-version: 22
 
   deploy:
     needs: build

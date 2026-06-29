@@ -212,7 +212,8 @@ const research = [
                       rel="noopener noreferrer"
                       class="text-accent hover:underline hover:text-accent font-medium inline-flex items-center gap-1 transition-colors duration-300"
                     >
-                      {r.linkLabel || 'Codebase'} &rarr;
+                      <span>{r.linkLabel || 'Codebase'}</span>
+                      <ArrowRight size={16} strokeWidth={2.5} />
                     </a>
                   </>
                 )}

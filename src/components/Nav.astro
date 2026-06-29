@@ -103,23 +103,26 @@ const links = [
 
     if (!toggle || !menu) return;
 
+    const activeToggle = toggle;
+    const activeMenu = menu;
+
     function openMenu() {
-      toggle.setAttribute('aria-expanded', 'true');
-      menu.classList.add('open');
-      menu.setAttribute('aria-hidden', 'false');
+      activeToggle.setAttribute('aria-expanded', 'true');
+      activeMenu.classList.add('open');
+      activeMenu.setAttribute('aria-hidden', 'false');
       document.addEventListener('click', handleOutsideClick);
     }
 
     function closeMenu() {
-      toggle.setAttribute('aria-expanded', 'false');
-      menu.classList.remove('open');
-      menu.setAttribute('aria-hidden', 'true');
+      activeToggle.setAttribute('aria-expanded', 'false');
+      activeMenu.classList.remove('open');
+      activeMenu.setAttribute('aria-hidden', 'true');
       document.removeEventListener('click', handleOutsideClick);
     }
 
     function toggleMenu(event: Event) {
       event.stopPropagation();
-      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      const isOpen = activeToggle.getAttribute('aria-expanded') === 'true';
       if (!isOpen) {
         openMenu();
       } else {
@@ -129,12 +132,12 @@ const links = [
 
     function handleOutsideClick(event: Event) {
       const target = event.target as HTMLElement;
-      if (!toggle.contains(target) && !menu.contains(target)) {
+      if (!activeToggle.contains(target) && !activeMenu.contains(target)) {
         closeMenu();
       }
     }
 
-    toggle.addEventListener('click', toggleMenu);
+    activeToggle.addEventListener('click', toggleMenu);
 
     links.forEach(link => {
       link.addEventListener('click', closeMenu);

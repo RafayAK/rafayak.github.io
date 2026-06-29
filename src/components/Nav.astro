@@ -12,18 +12,19 @@ const links = [
 ---
 
 <header
-  class="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-5"
+  class="relative mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-5"
 >
   <a href={href('/')} class="flex items-center text-ink no-underline" aria-label="Rafay">
     <Logo class="h-12 w-auto text-ink hover:text-accent transition-colors duration-300" />
   </a>
 
-  <nav class="flex items-center gap-5 text-body">
+  <!-- Desktop Navigation -->
+  <nav class="hidden md:flex items-center gap-6 text-body">
     {
       links.map((l) => (
         <a
           href={l.path.startsWith('/#') ? href('/') + l.path.slice(1) : href(l.path)}
-          class="text-ink no-underline hover:underline"
+          class="text-ink no-underline hover:text-accent transition-colors duration-300"
           target={l.path.endsWith('.pdf') ? '_blank' : undefined}
           rel={l.path.endsWith('.pdf') ? 'noopener noreferrer' : undefined}
         >
@@ -31,6 +32,114 @@ const links = [
         </a>
       ))
     }
+    <div class="h-4 w-[1px] bg-border/60"></div>
     <ThemeToggle client:load />
   </nav>
+
+  <!-- Mobile Controls (ThemeToggle + Burger Button) -->
+  <div class="flex md:hidden items-center gap-4">
+    <ThemeToggle client:load />
+    <button
+      id="mobile-menu-toggle"
+      class="flex h-10 w-10 flex-col items-center justify-center gap-[4px] rounded-lg border border-border bg-surface text-ink hover:text-accent hover:border-accent focus:outline-none transition-all duration-300 relative z-50 cursor-pointer"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+    >
+      <span class="block h-[2px] w-5 rounded-full bg-current transition-all duration-300 origin-center" id="line-top"></span>
+      <span class="block h-[2px] w-5 rounded-full bg-current transition-all duration-300 origin-center" id="line-middle"></span>
+      <span class="block h-[2px] w-5 rounded-full bg-current transition-all duration-300 origin-center" id="line-bottom"></span>
+    </button>
+  </div>
+
+  <!-- Mobile Collapsible Menu -->
+  <div
+    id="mobile-menu"
+    class="md:hidden absolute top-[calc(100%-8px)] right-6 z-40 flex w-48 flex-col rounded-xl border border-border bg-surface/95 backdrop-blur-md p-2 shadow-xl opacity-0 scale-95 -translate-y-2 pointer-events-none transition-all duration-300"
+    aria-hidden="true"
+  >
+    <nav class="flex flex-col gap-1 text-body">
+      {
+        links.map((l) => (
+          <a
+            href={l.path.startsWith('/#') ? href('/') + l.path.slice(1) : href(l.path)}
+            class="mobile-nav-link text-ink no-underline py-2 px-3 rounded-lg hover:bg-parchment hover:text-accent transition-all duration-200"
+            target={l.path.endsWith('.pdf') ? '_blank' : undefined}
+            rel={l.path.endsWith('.pdf') ? 'noopener noreferrer' : undefined}
+          >
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
 </header>
+
+<style>
+  /* Burger button animation */
+  #mobile-menu-toggle[aria-expanded="true"] #line-top {
+    transform: translateY(6px) rotate(45deg);
+  }
+  #mobile-menu-toggle[aria-expanded="true"] #line-middle {
+    opacity: 0;
+    transform: scale(0);
+  }
+  #mobile-menu-toggle[aria-expanded="true"] #line-bottom {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* Mobile menu open transition override */
+  #mobile-menu.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+</style>
+
+<script>
+  function setupMobileMenu() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('mobile-menu');
+    const links = document.querySelectorAll('.mobile-nav-link');
+
+    if (!toggle || !menu) return;
+
+    function openMenu() {
+      toggle.setAttribute('aria-expanded', 'true');
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden', 'false');
+      document.addEventListener('click', handleOutsideClick);
+    }
+
+    function closeMenu() {
+      toggle.setAttribute('aria-expanded', 'false');
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+      document.removeEventListener('click', handleOutsideClick);
+    }
+
+    function toggleMenu(event: Event) {
+      event.stopPropagation();
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      if (!isOpen) {
+        openMenu();
+      } else {
+        closeMenu();
+      }
+    }
+
+    function handleOutsideClick(event: Event) {
+      const target = event.target as HTMLElement;
+      if (!toggle.contains(target) && !menu.contains(target)) {
+        closeMenu();
+      }
+    }
+
+    toggle.addEventListener('click', toggleMenu);
+
+    links.forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
+  }
+
+  document.addEventListener('astro:page-load', setupMobileMenu);
+</script>

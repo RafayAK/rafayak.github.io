@@ -1,0 +1,74 @@
+---
+import { Info, Lightbulb, AlertCircle, AlertTriangle, ShieldAlert } from "lucide-react";
+
+const html = await Astro.slots.render("default");
+
+// Match the GitHub style tags: [!NOTE], [!INFO], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]
+// MDX parses blockquotes into <p>[!TAG]<br />content</p> or <p>[!TAG] content</p>
+const alertRegex = /^\s*<p>\s*\[!(NOTE|INFO|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:<br\s*\/?>)?\s*/i;
+const match = html.match(alertRegex);
+
+let isAlert = false;
+let type: "note" | "tip" | "important" | "warning" | "caution" = "note";
+let cleanHtml = html;
+
+if (match) {
+  isAlert = true;
+  const tag = match[1].toLowerCase();
+  type = (tag === "info" ? "note" : tag) as any;
+  // Strip the [!TAG] header prefix from the content
+  cleanHtml = html.replace(alertRegex, "<p>");
+}
+
+const styles = {
+  note: {
+    border: "border-l-[3px] border-l-[#0969da] py-1 pl-4",
+    icon: Info,
+    label: "Note",
+    iconColor: "text-[#0969da]",
+  },
+  tip: {
+    border: "border-l-[3px] border-l-[#1a7f37] py-1 pl-4",
+    icon: Lightbulb,
+    label: "Tip",
+    iconColor: "text-[#1a7f37]",
+  },
+  important: {
+    border: "border-l-[3px] border-l-[#8250df] py-1 pl-4",
+    icon: AlertCircle,
+    label: "Important",
+    iconColor: "text-[#8250df]",
+  },
+  warning: {
+    border: "border-l-[3px] border-l-[#9a6700] py-1 pl-4",
+    icon: AlertTriangle,
+    label: "Warning",
+    iconColor: "text-[#9a6700]",
+  },
+  caution: {
+    border: "border-l-[3px] border-l-[#cf222e] py-1 pl-4",
+    icon: ShieldAlert,
+    label: "Caution",
+    iconColor: "text-[#cf222e]",
+  },
+};
+
+const current = styles[type] || styles.note;
+const IconComponent = current.icon;
+---
+
+{
+  isAlert ? (
+    <div class={`my-6 ${current.border} not-prose`}>
+      <div class="flex items-center gap-2 mb-1.5 font-semibold text-body tracking-normal capitalize">
+        <IconComponent size={16} strokeWidth={2.2} className={current.iconColor} />
+        <span class={current.iconColor}>{current.label}</span>
+      </div>
+      <div class="text-body leading-relaxed text-ink/90 font-serif" set:html={cleanHtml} />
+    </div>
+  ) : (
+    <blockquote class="border-l-2 border-border pl-4 italic text-muted my-6">
+      <Fragment set:html={html} />
+    </blockquote>
+  )
+}

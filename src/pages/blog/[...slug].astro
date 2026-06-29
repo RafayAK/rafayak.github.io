@@ -1,0 +1,54 @@
+---
+import { getCollection, render } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { TracingBeam } from "../../components/ui/tracing-beam.tsx";
+import SquigglyDivider from "../../components/SquigglyDivider.astro";
+import AlertBlockquote from "../../components/AlertBlockquote.astro";
+import { href, formatDate } from "../../lib/utils";
+
+import { ArrowLeft } from "lucide-react";
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout
+  title={`${post.data.title} — Rafay`}
+  description={post.data.description}
+>
+  <article class="py-12 md:pl-10">
+    <TracingBeam client:load>
+      <a href={href("/blog")} class="text-caption text-muted inline-flex items-center gap-1.5 hover:text-ink transition-colors">
+        <ArrowLeft size={14} strokeWidth={2.5} />
+        <span>Blog</span>
+      </a>
+
+      <header class="mt-6 max-w-[680px]">
+        <h1
+          class="text-[clamp(32px,5vw,48px)] font-normal leading-[1.15] text-ink"
+        >
+          {post.data.title}
+        </h1>
+        <p class="mt-3 text-caption text-muted">
+          {formatDate(post.data.pubDate)}
+          {
+            post.data.tags.length > 0 && (
+              <span> · {post.data.tags.join(", ")}</span>
+            )
+          }
+        </p>
+      </header>
+
+      <div class="prose max-w-[680px] mt-10">
+        {/* `---` in MDX renders the animated squiggly divider. */}
+        <Content components={{ hr: SquigglyDivider, blockquote: AlertBlockquote }} />
+      </div>
+    </TracingBeam>
+  </article>
+</BaseLayout>

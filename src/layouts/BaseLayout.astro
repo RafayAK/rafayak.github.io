@@ -1,0 +1,109 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Nav from '../components/Nav.astro';
+import MusicPlayer from '../components/MusicPlayer.tsx';
+import SocialLinks from '../components/SocialLinks.astro';
+import { href } from '../lib/utils';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+}
+const {
+  title = 'Rafay Khan — AI Engineer',
+  description = 'Principal AI/ML Engineer. 8+ years shipping production LLM inference, computer vision, and edge ML systems. Portfolio, research, and writing.',
+  image = 'website-preview.png',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin);
+const ogImage = new URL(href(image), Astro.site || Astro.url.origin);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href={href('favicon.svg')} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+
+    <!-- Set theme before paint — no flash of the wrong mode. -->
+    <script is:inline>
+      (function () {
+        var t = localStorage.getItem('theme');
+        var d = t
+          ? t === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', d);
+      })();
+    </script>
+
+    <ClientRouter />
+  </head>
+
+  <body class="min-h-screen bg-canvas text-ink">
+    <Nav />
+
+    <main class="mx-auto w-full max-w-[1100px] px-6 pb-24">
+      <slot />
+    </main>
+
+    <footer class="mx-auto w-full max-w-[1100px] px-6 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-caption text-muted">
+      <span>© {new Date().getFullYear()} Rafay — built with Astro.</span>
+      <SocialLinks iconSize={16} />
+    </footer>
+
+    <MusicPlayer client:load transition:persist />
+
+    <!-- Keep theme + scroll animations alive across View Transitions. -->
+    <script>
+      function applyTheme() {
+        const t = localStorage.getItem('theme');
+        const d = t
+          ? t === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', d);
+      }
+      function initAnimations() {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('in-view');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px' },
+        );
+        document
+          .querySelectorAll('[data-animate]:not(.in-view)')
+          .forEach((el) => io.observe(el));
+      }
+      applyTheme();
+      initAnimations();
+      document.addEventListener('astro:after-swap', () => {
+        applyTheme();
+        initAnimations();
+      });
+    </script>
+  </body>
+</html>

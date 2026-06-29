@@ -1,0 +1,257 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProfileSummary from '../components/ProfileSummary.astro';
+import ProjectCard from '../components/ProjectCard';
+import SquigglyDivider from '../components/SquigglyDivider.astro';
+import { href, formatDate } from '../lib/utils';
+import { ArrowRight } from 'lucide-react';
+import SocialLinks from '../components/SocialLinks.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const projects = [
+  {
+    title: 'Qi Card AI Assistant',
+    description:
+      'Voice & chat LLM assistant for Iraq\'s largest payments network. Arabic, Kurdish and English, WhatsApp-first, real-time voice. Millions of active users.',
+    tags: ['LLMs', 'Voice AI', 'Multilingual', 'SGLang', 'AWS'],
+    video: undefined,
+    poster: '/media/previews/qicard.png',
+    link: 'https://www.instagram.com/reels/DHEPWF0t3uU/',
+    expandedContent: [
+      'FastAPI and SGLang inference server with custom models. End-to-end latency ~5s. Autoscaling on AWS ECS and deployed via Terraform.',
+      'The non-obvious problem: knowing when not to answer. Wrong answers on financial queries cost real trust. Built the guardrails and human escalation layer around that (HITL).',
+      'OpenTelemetry across the full stack. Arabic adds eval complexity — failure modes aren\'t symmetric across languages, so evals had to be too.',
+    ],
+  },
+  {
+    title: 'In-Cart Video Intelligence',
+    description:
+      '7-class action detection at 20 FPS on 1,500+ smart shopping carts across the US, Europe, and the Middle East. The demo above is an early prototype.',
+    tags: ['Computer Vision', 'Edge AI', 'Nvidia Triton', 'Kubernetes', "GCP"],
+    video: '/media/demo1.mp4',
+    poster: '/media/project-1.jpg',
+    link: 'https://techcrunch.com/2022/10/12/veeve-6-7m-smart-cart/',
+    expandedContent: [
+      'Most of the hard work was distribution shift: same model, different stores, lighting rigs, cart designs, and product assortments across three continents.',
+      'Part deployed on edge (Nvidia Jetson then later Rockchip SOCs for) and part in cloud (GCP).',
+      'NVIDIA Triton on Kubernetes (GCP). W&B for experiment tracking and dataset versioning across a large annotation team. [Work contributed to Veeve\'s $6.7M round](https://techcrunch.com/2022/10/12/veeve-6-7m-smart-cart/).',
+    ],
+  },
+  {
+    title: 'Hand-Object Segmentation',
+    description:
+      'Personal project. Intel RealSense depth + RGB into a segmentation model for hands and held objects, running on-device at sub-10ms.',
+    tags: ['PyTorch', 'RealSense', 'Edge AI', 'ONNX Runtime'],
+    video: '/media/demo2.mp4',
+    poster: '/media/project-2.jpg',
+    link: 'https://github.com/RafayAK',
+    expandedContent: [
+      'Depth solves most of the occlusion problem — until hands and objects are at similar depths. That\'s where the interesting work is.',
+      'ONNX Runtime + quantization to hit sub-10ms on-device. Once the data pipeline is solid, it\'s mostly a model capacity vs. latency budget negotiation.',
+    ],
+  },
+];
+
+const research = [
+  {
+    institution: 'Mila',
+    role: 'Research Fellow (part-time)',
+    period: 'Apr ’22 – Jun ’24',
+    project: '“More than more data? Comparing training with data augmentation vs IID data”',
+    description: 'Designed controlled experiments comparing augmentation regimes against IID training to analyze effects on robustness, convergence, and learned representations. Developed custom augmentation methods and toy datasets to isolate how specific transformations affect model behavior. Built a modular Python experiment workbench for reproducible training. Key question: does more augmented data actually teach a model something different, or just the same thing louder?',
+    supervisors: [
+      { name: 'Alex Hernandez Garcia', url: 'https://mila.quebec/en/directory/alex-hernandez-garcia-0' }
+    ],
+    link: 'https://github.com/alexhernandezgarcia/data-augmentation',
+  },
+  {
+    institution: 'TUKL-NUST R&D Lab',
+    role: 'Research Assistant / Vision Lead',
+    period: 'Sep ’16 – Jun ’17',
+    project: '“Fish Biodiversity Estimation by Low-Cost Non-Destructive Video Based Sampling (FIBEVID)”',
+    description: 'Led the computer vision team in collaboration with Pakistan Fisheries Department and University of Kaiserslautern to build a non-destructive fish biodiversity estimation tool for Pakistan’s National fish, the Mahasher. Project went on to receive funding from Hochschule RheinMain and DAAD (German Academic Exchange Service). Created and published the first-ever Mahasher fish dataset of 100,000 labeled images in its natural river habitat.',
+    supervisors: [
+      { name: 'Dr. Faisal Shafiat', url: 'https://scholar.google.com/citations?user=o9RCNZYAAAAJ&hl=en' },
+      { name: 'Dr. Imran Malik', url: 'https://scholar.google.com/citations?hl=en&user=W0u4ORoAAAAJ&view_op=list_works' }
+    ],
+    link: 'https://www.hs-rm.de/de/fachbereiche/design-informatik-medien/forschungsprofil/fibevid/',
+    linkLabel: 'FIBEVID Project',
+  },
+  {
+    institution: 'TUKL-NUST R&D Lab',
+    role: 'Research Assistant (part-time)',
+    period: 'Jun ’16 – Sep ’16',
+    project: '“Forgery detection and segmentation of handwritten text through Hyperspectral Image Analysis”',
+    description: 'Summer intern collaborating with researchers at University of Kaiserslautern to detect forged bank cheques. Performed statistical analysis on hyperspectral image data to separate out inks of different varieties.',
+    supervisors: [
+      { name: 'Dr. Imran Malik', url: 'https://scholar.google.com/citations?hl=en&user=W0u4ORoAAAAJ&view_op=list_works' }
+    ],
+  },
+];
+---
+
+<BaseLayout>
+  <!-- Hero -->
+  <section class="py-16 md:py-24 grid gap-8 md:grid-cols-[1fr_280px] md:items-center">
+    <div>
+      <p class="text-caption uppercase tracking-wide text-muted">Principal AI / ML Engineer</p>
+      <h1 class="mt-3 max-w-[14ch] text-[clamp(40px,8vw,56px)] font-normal leading-[1.1] text-ink">
+        I build AI that ships 🚢.
+      </h1>
+      <p class="mt-5 max-w-[58ch] text-subheading text-muted">
+        Eight+ years of buidling models and turning them into production systems. Portfolio, research, and writing.
+      </p>
+    </div>
+    <div class="flex justify-center md:justify-end">
+      <!-- Framed Photo Card -->
+      <div class="w-[240px] rotate-[-1deg] hover:rotate-[1deg] transition-transform duration-500 bg-surface border border-border p-3 pb-5 rounded-[16px] flex flex-col items-center">
+        <div class="relative w-full aspect-[3/4] overflow-hidden rounded-[8px] bg-parchment">
+          <img
+            src={href('/media/rafay.jpg')}
+            alt="Rafay"
+            width="216"
+            height="288"
+            class="w-full h-full object-cover dark:brightness-90 transition-all duration-700"
+            fetchpriority="high"
+          />
+        </div>
+        <p class="mt-3 text-caption text-muted font-serif italic">Karakoram, 2022</p>
+        <div class="mt-3 w-full border-t border-border/50 pt-3 flex justify-center">
+          <SocialLinks iconSize={16} />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <ProfileSummary />
+
+  <SquigglyDivider />
+
+  <!-- Work -->
+  <section id="projects" class="scroll-mt-24 py-8">
+    <h2 class="text-heading font-semibold text-ink">Featured Projects</h2>
+    <div class="mt-8 grid gap-6 md:grid-cols-2 max-w-4xl">
+      {
+        projects.map((p) => {
+          const videoUrl = p.video ? href(p.video) : undefined;
+          const posterUrl = p.poster ? href(p.poster) : undefined;
+          const isGithub = p.link?.includes('github.com');
+          const githubUrl = isGithub ? p.link : undefined;
+          const liveUrl = !isGithub ? p.link : undefined;
+
+          return (
+            <ProjectCard
+              client:visible
+              title={p.title}
+              description={p.description}
+              videoUrl={videoUrl}
+              posterUrl={posterUrl}
+              tags={p.tags}
+              githubUrl={githubUrl}
+              liveUrl={liveUrl}
+              expandedContent={p.expandedContent}
+            />
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <SquigglyDivider />
+
+  <!-- Research Works -->
+  <section id="research" class="scroll-mt-24 py-8 max-w-4xl">
+    <h2 class="text-heading font-semibold text-ink">Research Work</h2>
+    <div class="mt-8 divide-y divide-border border-t border-border">
+      {
+        research.map((r) => (
+          <div class="grid md:grid-cols-[220px_1fr] gap-4 md:gap-8 py-8 first:pt-6 last:pb-6">
+            <!-- Left Column: Institution, Role, Period -->
+            <div class="flex flex-col">
+              <h3 class="text-subheading font-semibold text-ink leading-snug">{r.institution}</h3>
+              <span class="text-caption text-muted font-medium mt-1">{r.role}</span>
+              <span class="text-caption text-muted font-serif italic mt-0.5">{r.period}</span>
+            </div>
+
+            <!-- Right Column: Project details -->
+            <div class="flex flex-col gap-2">
+              <h4 class="text-subheading font-medium text-ink leading-snug font-serif">
+                {r.project}
+              </h4>
+              <p class="text-body text-muted leading-relaxed mt-1">
+                {r.description}
+              </p>
+              
+              <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-caption text-muted">
+                <span>
+                  Supervisor{r.supervisors.length > 1 ? 's' : ''}:{' '}
+                  {r.supervisors.map((s, idx) => (
+                    <>
+                      {idx > 0 && ', '}
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-ink hover:text-accent underline decoration-border decoration-1 underline-offset-4 hover:decoration-accent transition-colors duration-300"
+                      >
+                        {s.name}
+                      </a>
+                    </>
+                  ))}
+                </span>
+                {r.link && (
+                  <>
+                    <span class="text-border" aria-hidden="true">|</span>
+                    <a
+                      href={r.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-accent hover:underline hover:text-accent font-medium inline-flex items-center gap-1 transition-colors duration-300"
+                    >
+                      {r.linkLabel || 'Codebase'} &rarr;
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <SquigglyDivider />
+
+  <!-- Recent writing -->
+  <section class="py-8">
+    <div class="flex items-baseline justify-between">
+      <h2 class="text-heading font-semibold text-ink">From the blog</h2>
+      <a href={href('/blog')} class="text-body inline-flex items-center gap-1.5 hover:text-ink transition-colors">
+        <span>All posts</span>
+        <ArrowRight size={16} strokeWidth={2.5} />
+      </a>
+    </div>
+
+    <ul class="mt-8 divide-y divide-border border-y border-border">
+      {
+        posts.map((post) => (
+          <li>
+            <a
+              href={href(`/blog/${post.id}`)}
+              class="flex flex-col gap-1 py-5 text-ink no-underline hover:bg-parchment/60 md:flex-row md:items-baseline md:justify-between"
+            >
+              <span class="text-subheading font-medium">{post.data.title}</span>
+              <span class="text-caption text-muted">
+                {formatDate(post.data.pubDate)}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

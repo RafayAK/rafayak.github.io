@@ -1,0 +1,1333 @@
+---
+title: "Nothing but NumPy: Understanding & Creating Binary Classification Neural Networks with Computational Graphs from Scratch"
+description: "This post continues from 'Understanding and Creating Neural Networks with Computational Graphs from Scratch'..."
+pubDate: 2019-11-14
+tags: ["numpy", "binary-classification", "neural-networks", "deep-learning", "ai"]
+---
+
+> [!INFO]
+> This blog was originally published on [Medium](https://medium.com/data-science/nothing-but-numpy-understanding-creating-binary-classification-neural-networks-with-e746423c8d5c)
+
+
+*Nothing but Numpy is a continuation of my neural network series. To view the previous blog in this series or for a refresher on neural networks you may click* [*here*](/blog/nothing-but-numpy-neural-networks-from-scratch)*.*
+
+This post continues from [Understanding and Creating Neural Networks with Computational Graphs from Scratch](/blog/nothing-but-numpy-neural-networks-from-scratch).
+
+It’s easy to feel lost when you have twenty browser tabs open trying to understand a complex concept and most of the writeups you come across regurgitate the same shallow explanations. In this second installment of *Nothing but NumPy,* I’ll again strive to give the reader a deeper understanding of neural networks as we delve deeper into a specific kind of neural network called a “Binary Classification Neural Network”. *If you’ve read my* [*previous post*](/blog/nothing-but-numpy-neural-networks-from-scratch) *then this will seem very familiar.*
+
+Understanding “Binary Classification” will help us lay down major concepts that help us understand many of the choices we make in multi-classification, which is why this post will also serve as a prelude to “Understanding & Creating Softmax Layer with Computational Graphs from Scratch”.
+
+*This blog post is divided into two parts, the first part will be understanding the basics of a Binary Classification Neural Network and the second part will comprise the code for implementing everything learned from the first part.*
+
+## Part Ⅰ: Understanding Binary Classification
+
+## Let’s dig in🍽️
+
+Binary classification is a common machine learning task. It involves predicting whether a given example is part of one class or the other. The two classes can be arbitrarily assigned either a ***“0”*** or a ***“1”*** for mathematical representation, but more commonly the object/class of interest is assigned a “***1***”***(positive label)*** and the rest a “***0***”***(negative label)***. For example:
+
+- Is the given picture of a cat(***1***) or not-a-cat(***0***)?
+- Given a patient’s test results, is the tumor benign(***0***; harmless) or malignant(***1***; harmful)?
+- Given a person’s information (eg. age, education level, marital status, etc) as features, predict whether they make less than $50K(***0***) or more than $50K(***1***) a year.
+- Is the given email spam(1) or not-spam(0)?
+
+In all the examples above the object/class of interest is assigned a positive label(***1***).
+
+Most of the time it will be fairly obvious whether a given machine learning problem requires *binary classification* or not. A general rule of thumb is that *binary classification helps us answer yes(1)/no(0) questions.*
+
+Now let’s build a simple 1-layer neural network(input and output layers only) and hand solve it to get a better picture. *(we’ll make a neural network the same as the one elaborated in my* [*previous post*](/blog/nothing-but-numpy-neural-networks-from-scratch)*, but with one key difference,* ***the output of the neural network is interpreted as a probability*** *instead of a raw value).*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-1.png" alt="Fig 1. Simple input-output only neural network" />
+  <figcaption>Fig 1. Simple input-output only neural network</figcaption>
+</figure>
+
+Let’s expand this neural network out to reveal its intricacies.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-2.png" alt="Fig 2. Expanded neural network" />
+  <figcaption>Fig 2. Expanded neural network</figcaption>
+</figure>
+
+For those not familiar with all the different parts of a neural network I’ll go over each of them briefly. (A more detailed explanation is provided in my [previous post](/blog/nothing-but-numpy-neural-networks-from-scratch))
+
+---
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-3.png" alt="Fig 3. Annotated Expanded Neural Network" />
+  <figcaption>Fig 3. Annotated Expanded Neural Network</figcaption>
+</figure>
+
+- **Inputs: *x₁*** and ***x₂*** are the input nodes for two features that represent an example we want our neural network to learn from. Since input nodes form the first layer of the network they are collectively referred to as the “***input layer***”.
+- **Weights: *w₁*** & ***w₂*** represent the weight values that we associate with the inputs ***x₁*** & ***x₂,*** respectively***.*** Weights control the influence each input has in the calculation of the next node. A neural network “learns” these weights to make accurate predictions. *Initially, weights are randomly assigned.*
+- **Linear Node(z):** The “***z***” node creates a linear function out of all the inputs coming into it *i.e* ***z = w₁x₁+w₂ x₂+b***
+- **Bias:** “***b***” represents the bias node. The bias node inserts an additive quantity into the linear function node(***z***). As the name suggests *the bias sways the output so that it may better align with our desired output*. The value of the bias is initialized to ***b=0*** and is also learned during the training phase.
+- **Sigmoid Node:** This ***σ*** node, called the Sigmoid node, takes the input from a preceding linear node(***z***) and passes it through the following activation function, called the **Sigmoid function**(because of its S-shaped curve), also known as the **Logistic function**:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-4.png" alt="Fig 4. Output sigmoid/logistic node" />
+  <figcaption>Fig 4. Output sigmoid/logistic node</figcaption>
+</figure>
+
+Sigmoid is one of the many “activations functions” used in neural networks. Activation functions are non-linear functions(*not simple straight lines*). They *add non-linearity to a neural network by expanding its dimensionality*, in turn, helping it learn complex things*(for more details please refer to my previous* [*post*](/blog/nothing-but-numpy-neural-networks-from-scratch)*)*. Since it is the last node in our neural network, it is the output of the neural network and is, therefore, called the “output layer”.
+
+***A linear node(z) combined with a bias node(b) and an activation node*, such as the sigmoid node(σ), forms a “*neuron”* in an artificial neural network***.*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-5.png" alt="Fig 5. A neuron in a neural network" />
+  <figcaption>Fig 5. A neuron in a neural network</figcaption>
+</figure>
+
+*In neural network literature, every neuron in an artificial neural network is assumed to have a linear node along with its corresponding bias, hence the linear node and bias nodes are not shown in neural network diagrams*, as in ***Fig.1****.* To get a deeper understanding of the computations in a neural network I will continue to show expanded versions of neural networks in this blog post, as in ***Fig.2***.
+
+---
+
+**The use of a *single* Sigmoid/Logistic neuron in the output layer is the mainstay of a *binary classification neural network.*** This is because the ***output of a Sigmoid/Logistic function can be conveniently interpreted as the estimated probability(p̂,*** *pronounced p-hat****) that the given input belongs to the “positive” class.*** How? Let’s delve a bit deeper.
+
+The Sigmoid function squashes any input into the output range ***0&lt;σ&lt;1***. So, for example, if we were creating a neural network-based “cat(1) vs. not-cat(0)” detector, given images as input examples, our output layer will still be a *single* Sigmoid neuron, converting all the calculations from previous layers into ***p̂,*** a simple 0–1 output range.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-6.png" alt="Fig 6. Structure of the output layer of any binary classification neural network" />
+  <figcaption>Fig 6. Structure of the output layer of any binary classification neural network</figcaption>
+</figure>
+
+We can then simply interpret ***p̂*** as “*What is the probability that the given input image is of a cat?*”, where “cat” is the positive label. If ***p̂≈0***, then it is **highly unlikely** that the input image is of a cat, on the other hand, ***p̂≈1*** then it is **very likely** that the input image is of a cat. *Simply put,* ***p̂*** *is how confident our neural network model is in predicting that the input is a cat i.e the positive class(****1****).*
+
+This can be mathematically summarized simply as a conditional probability:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-7.png" alt="Fig 7. Piecewise probability equation" />
+  <figcaption>Fig 7. Piecewise probability equation</figcaption>
+</figure>
+
+Since every binary classification neural net architecture has a *single Sigmoid neuron in the output layer*, as shown in ***Fig.6*** above, the output of the Sigmoid (estimated probability) depends on the output of the linear node(***z***) associated with the neuron. If the value of the linear node(***z***) is :
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-8.png" alt="Fig 8. Sigmoid Curve interpreted as a probability distribution" />
+  <figcaption>Fig 8. Sigmoid Curve interpreted as a probability distribution</figcaption>
+</figure>
+
+1. ***Greater than zero(z&gt;0)*** then the output of the Sigmoid node is ***greater than 0.5****(σ(z)&gt;0.5)*, which can be interpreted as “The probability that the input image is of a cat is ***greater*** than 50%”.
+2. ***Less than zero(z&lt;0)*** then the output of the Sigmoid node is ***less than 0.5(σ(z)&lt;0.5)***, which can be interpreted as “The probability that the input image is of a cat is ***less*** than 50%”.
+3. ***Equal to zero(z=0)*** then the output of the Sigmoid node ***equals 0.5(σ(z)=0.5)***, which means that “The probability that the input image is of a cat is ***exactly*** 50%”.
+
+Now that we know what everything represents in our neural network let’s see what calculations our binary classification neural network performs given the following data set:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-9.png" alt="Fig 9. AND logic gate data and plot" />
+  <figcaption>Fig 9. AND logic gate data and plot</figcaption>
+</figure>
+
+The data above represents the AND logic gate, where the output is given a positive label(***1***) only when both the inputs are ***x₁=1*** and ***x₂=1***, all other cases are assigned a negative label(***0***). Each row of the data represents an example we want our neural network to learn from and then classify. I have also plotted the points on a 2-D plane so that it is easy to visualize*(red dots represent points where the class(****y****) is 0 and the green cross represents the point where the class is* ***1****)*. This data set also happens to be ***linearly separable*** i.e. we can draw a straight line to separate the positive labeled examples from the negative ones.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-10.png" alt="Fig 10. Showing linear separation of AND gate data points" />
+  <figcaption>Fig 10. Showing linear separation of AND gate data points</figcaption>
+</figure>
+
+The blue line shown above, called the ***decision boundary****,* separates our two classes. Above the line is our positive labeled example(green cross) and below the line are our negative labeled examples(red crosses). Behind the scenes, this blue line is formed by the ***z****(linear function) node*. We’ll later see how the neural network learns this *decision boundary*.
+
+Like my previous blog post, first, we will perform ***Stochastic Gradient Descent***, which is training a neural network using just one example from our training data. Then we’ll generalize our learnings from the stochastic process to ***Batch Gradient Descent***(*preferred method*) where we train the neural network using all the examples in the training data.
+
+---
+
+## Stochastic Gradient Descent
+
+Computations in a neural network move from left to right, this is called ***forward propagation.*** Let’s go through all the forward computations our neural network will perform when provided with *just the first training example* ***x₁ = 0*** and ***x₂ = 0***. Also, we’ll randomly initialize the weights to ***w₁=0.1*** and ***w₂=0.6*** and bias to ***b=0.***
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-11.png" alt="Fig 11. Forward propagation on the first example from AND gate table" />
+  <figcaption>Fig 11. Forward propagation on the first example from AND gate table</figcaption>
+</figure>
+
+So, the prediction of the neural network is ***p̂=0.5.*** *Recall, this is a binary classification neural network,* ***p̂*** here represents the estimated probability that the input example, with features ***x₁=0*** & ***x₂=0***, belongs to the positive class(***1***). Our neural network currently thinks that there is a ***0.5***(or ***50%***) chance that the first training example belongs to the positive class (*recall from the probability equation this equates to* ***P(1∣ x₁, x₂; w,b)=p̂=0.5***).
+
+Yikes! This is kinda poor 😕, especially since the *negative* label is associated with the first example, i.e ***y=0.*** The estimated probability should be around ***p̂≈0;*** *it should be very unlikely that the first example belongs to the positive class, so that,* *the chance of belonging to the negative class is high* (i.e ***P(0∣ x₁, x₂; w,b)≈1-p̂≈1***)*.*
+
+If you’ve read my previous post then you know that at this point we need a Loss function to help us out. So, what Loss function should we use to tell a ***binary classification* neural network** to correct its estimated probability? In comes the ***Binary*** ***Cross-Entropy Loss Function*** to our rescue.
+
+---
+
+### Binary Cross-Entropy Loss Function
+
+*Note: in most programming languages “****log****” is the natural logarithm(log with base-****e****), denoted in mathematics as “****ln****”. For consistency between code and equations consider “****log****” as natural logarithm and not as “****log₁₀****”(log with base-10).*
+
+The Binary Cross-Entropy(BCE) Loss function is defined as follows :
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-12.png" alt="Fig 12. The Binary Cross-Entropy Loss function" />
+  <figcaption>Fig 12. The Binary Cross-Entropy Loss function</figcaption>
+</figure>
+
+*All Loss functions essentially tell us how far our predicted output is from our desired output,* ***for one example only****. Simply put, a Loss function computes the error between prediction and actual value*. Keeping that in view, the Binary Cross-Entropy(BCE) Loss function computes a different Loss when the associated label of a training example is ***y=1****(positive)* and a different Loss when the label is ***y=0****(negative)*. Let’s see:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-13.png" alt="Fig 13. Binary Cross-Entropy Loss function broken down into piecewise equation" />
+  <figcaption>Fig 13. Binary Cross-Entropy Loss function broken down into piecewise equation</figcaption>
+</figure>
+
+Now it’s apparent that the BCE Loss function in ***Fig.12*** is just an elegantly compressed version of the piecewise equation**.**
+
+Let’s plot the above piecewise function to visualize what’s going on underneath.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-14.png" alt="Fig 14. Visualizing the BCE Loss function for each class" />
+  <figcaption>Fig 14. Visualizing the BCE Loss function for each class</figcaption>
+</figure>
+
+So, the BCE Loss function captures the intuition that the neural network should pay a high penalty(***Loss→∞***) when the estimated probability, with respect to the training example’s label, is completely wrong. On the other hand, the Loss should equal zero(***Loss=0***) when the estimated probability, with respect to the training example’s label, is correct. Simply put, the BCE Loss should equal zero in only two instances:
+
+1. if the example is positively labeled(y=1) the neural network model should be *completely sure that the example* ***belongs to the positive class*** *i.e* ***p̂=1.***
+2. if the example is negatively labeled(y=0) the neural network model should be c*ompletely sure that the example* ***does not*** ***belong to the positive*** *class i.e* ***p̂=0.***
+
+*In neural networks, the gradient/derivative of the Loss function dictates whether to increase or decrease the weights and bias of a neural network.* So let’s see what the derivative of the Binary Cross-Entropy(BCE) Loss function looks like:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-15.png" alt="Fig 15. The derivative of the Binary Cross-Entropy Loss function" />
+  <figcaption>Fig 15. The derivative of the Binary Cross-Entropy Loss function</figcaption>
+</figure>
+
+We can also split the derivative into a piecewise function and visualize its effects:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-16.png" alt="Fig 16. Breaking down the derivative of the loss function and visualizing the gradient" />
+  <figcaption>Fig 16. Breaking down the derivative of the loss function and visualizing the gradient</figcaption>
+</figure>
+
+***A positive derivative would mean decrease the weights and negative would mean increase the weights.*** ***The steeper the slope(gradient) the more incorrect the prediction was.*** Let’s take a moment to make sure we understand this statement:
+
+- *If the gradient is* ***negative*** that would mean we are looking at the first Loss curve, where the actual label for the example is *positive(y=1)*. The only way to drive Loss to zero would be to move in the opposite direction of the slope(gradient), *from negative to positive.* Therefore, we need to *increase the weights and bias* so that ***z = w₁x₁+w₂x₂+b &gt; 0*** *(recall* ***Fig.8****)* and in turn *estimated probability of belonging to the positive class is* ***p̂≈σ(z)≈1.***
+- Similarly, when the gradient is ***positive*** we are looking at the second Loss curve where the actual label for the example is *negative(y=0).* The only way to drive the Loss to zero would again be to move in the opposite direction of the slope(gradient), this time *from positive to negative.* In this instance, *we would need to decrease the weights and bias so that* ***z = w₁x₁+w₂x₂+b &lt; 0*** and consequently *estimated probability of belonging to the positive class* ***p̂≈σ(z)≈0.***
+
+The explanation provided for BCE Loss up till now is sufficient for all intents and purposes, but the curious among you might be wondering where did this Loss function even come from and why not just use the Mean Squared Error Loss function like in the [previous post](/blog/nothing-but-numpy-neural-networks-from-scratch)? More on this later.
+
+---
+
+Now that we know the purpose of a Loss function and how the Binary Cross-Entropy Loss function works let’s calculate the BCE Loss on our current example(***x₁ = 0*** and ***x₂ = 0***), for which our neural network estimated that the probability for belonging to the positive class is ***p̂=0.5*** while its label(***y***) is ***y=0:***
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-17.png" alt="Fig 17. Loss on the first example" />
+  <figcaption>Fig 17. Loss on the first example</figcaption>
+</figure>
+
+The Loss is about ***0.693***(rounded to 3 decimal places). *We can now use the derivative of the BCE Loss function to check if we need to increase or decrease the weights and bias, using the process called* ***backpropagation;*** *it is the opposite of the forward-propagation, we track backward from output to input*. Backpropagation allows us to figure out how much of the Loss each part of the neural network was responsible for, we can then adjust those parts of the neural network accordingly.
+
+---
+
+As shown in my previous [post](/blog/nothing-but-numpy-neural-networks-from-scratch), we’ll employ the following graph technique for propagating the gradients back from the output layer to the input layer of the neural network:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-18.png" alt="Fig 18. Gradient Flow" />
+  <figcaption>Fig 18. Gradient Flow</figcaption>
+</figure>
+
+*At each node, we only have our local gradient computed(partial derivatives of that node). Then during backpropagation, as we are receiving numerical values of gradients from upstream, we multiply upstream gradients with local gradients and pass them on to their respective connected nodes.* *This is a generalization of the* ***chain rule*** *from calculus.*
+
+---
+
+Let’s go over backpropagation step by step:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-19-a.png" alt="Fig 19.a. Backpropagation on the 1ˢᵗ example" />
+  <figcaption>Fig 19.a. Backpropagation on the 1ˢᵗ example</figcaption>
+</figure>
+
+---
+
+For the next calculation, we’ll need the derivative of the Sigmoid function which forms the local gradient at the red node. The derivative if the Sigmoid function is(derived in detail in my [previous post](/blog/nothing-but-numpy-neural-networks-from-scratch)):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-20.png" alt="Fig 20. The derivative of the sigmoid function" />
+  <figcaption>Fig 20. The derivative of the sigmoid function</figcaption>
+</figure>
+
+---
+
+Now let’s use the derivate of the Sigmoid node and backpropagate the gradient further:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-19-b.png" alt="Fig 19.b. Backpropagation on the 1ˢᵗ example" />
+  <figcaption>Fig 19.b. Backpropagation on the 1ˢᵗ example</figcaption>
+</figure>
+
+Gradients should not propagate back to the input nodes( i.e red arrows should not travel towards the green nodes) as we do not want to change our input data, we only intend to change the weights associated with them.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-19-c.png" alt="Fig 19.c. Backpropagation on the 1ˢᵗ example" />
+  <figcaption>Fig 19.c. Backpropagation on the 1ˢᵗ example</figcaption>
+</figure>
+
+Finally, we can update the parameters(weights and bias) of the neural network by performing ***gradient descent.***
+
+---
+
+### Gradient Descent
+
+***Gradient descent*** is adjusting the parameters of the neural network by moving in the negative direction of the gradient *i.e away from a sloping region to a flatter region*.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-21.png" alt="Fig 21. Visualizing Gradient Descent on Binary Cross-Entropy Loss function" />
+  <figcaption>Fig 21. Visualizing Gradient Descent on Binary Cross-Entropy Loss function</figcaption>
+</figure>
+
+The general equation for gradient descent is:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-22.png" alt="Fig 22. The general equation for gradient descent" />
+  <figcaption>Fig 22. The general equation for gradient descent</figcaption>
+</figure>
+
+*The Learning Rate,* ***α****(pronounced alpha)****,*** is used to control the step size down the Loss curve(***Fig. 21***). The learning rate is a ***hyper-parameter*** of the neural network, which means it can’t be learned through the backpropagation of gradients and must be set by the creator of the neural network, ideally after some experimentation. For more information about the effects of the learning rate, you may refer to my previous [post](/blog/nothing-but-numpy-neural-networks-from-scratch).
+
+Notice that the gradient descent steps (blue arrows) keep getting smaller and smaller, that’s because as we move away from the sloping region to a flatter region, near the minimum point, the magnitude of the gradient also decreases resulting in progressively smaller steps.
+
+---
+
+We’ll set the *learning rate*(***α***) to ***α=1.***
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-23.png" alt="Fig 23. Calculating new weights and bias" />
+  <figcaption>Fig 23. Calculating new weights and bias</figcaption>
+</figure>
+
+Now that we have updated the weights and bias(actually we were only able to update our bias in this training iteration) let’s do a **forward propagation** on the same example and **calculate the new Loss** to check if we’ve done the right thing.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-24.png" alt="Fig 24. Forward propagation with the updated bias on 1ˢᵗ example" />
+  <figcaption>Fig 24. Forward propagation with the updated bias on 1ˢᵗ example</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-25.png" alt="Fig 25. New loss after training on the 1ˢᵗ example" />
+  <figcaption>Fig 25. New loss after training on the 1ˢᵗ example</figcaption>
+</figure>
+
+Now the estimated probability for the 1ˢᵗ example belonging to the positive class(***p̂***) is down from 0.5 to approximately ***0.378***(rounded to 3 d.p) and consequently, the BCE Loss has reduced a bit, too, down from 0.693 to around ***0.475***(to 3 d.p).
+
+Up till now, we have performed ***stochastic gradient descent.*** We have used only one example(***x₁=0*** and ***x₂=0***), from our AND gate dataset of four examples, to perform a single training iteration(*each training iteration is forward propagation, calculating Loss, followed by backward propagation and updating the weights through gradient descent*).
+
+We can continue on this path of updating the weights just by learning from one example at a time, but ideally, we’d like to learn from multiple examples at a time and reduce our Loss across all of them.
+
+---
+
+## Batch gradient descent
+
+***In batch gradient descent****(*also called *full batch gradient descent) we use all the training examples in a dataset during each training iteration. (If batch gradient descent is not possible for some reason, e.g. size of all the training data is too big to fit into RAM or GPU, we may use a subset of the dataset in each training iteration, this is called* ***mini-batch gradient descent****.)*
+
+**A batch is just a vector/matrix full of training examples.**
+
+Before we proceed with processing multiple examples we need to define a ***Cost function.***
+
+---
+
+### Binary Cross Entropy Cost Function
+
+For batch gradient descent we need to adjust the *Binary Cross Entropy(BCE) Loss function* to accommodate not just one example but all the examples in a batch. This adjusted *Loss* function is called the ***Cost*** function*(also represented by the letter* ***J*** *in neural network literature and some times also called the* ***objective function****)*.
+
+**Instead of calculating the *Loss* on one example, the *Cost* function calculates *average* *Loss* across *ALL* the examples in the batch.**
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-26.png" alt="Fig 26. Binary Cross-Entropy Cost function" />
+  <figcaption>Fig 26. Binary Cross-Entropy Cost function</figcaption>
+</figure>
+
+When performing batch gradient descent(or mini-batch gradient descent) we take the derivative with respect to the Cost function instead of the Loss function. So next, we’ll see how to take the derivative of the Binary Cross-Entropy Cost function, using a simple example and then generalizing from there.
+
+### The derivative of Binary Cross-Entropy Cost function
+
+In vectorized form our BCE Cost function looks as follows:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-27.png" alt="Fig 27. Cost function taking vectorized inputs" />
+  <figcaption>Fig 27. Cost function taking vectorized inputs</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-28.png" alt="Fig 28. Calculation of Cost on a simple vectorized example" />
+  <figcaption>Fig 28. Calculation of Cost on a simple vectorized example</figcaption>
+</figure>
+
+As expected the Cost is just the average of the Loss of the two examples, but all our calculations are vectorized, allowing us to compute the Binary Cross-Entropy Cost for a batch in one go. We prefer to use vectorized computations in neural networks as computer hardware(CPU and GPU) is better suited to batch computations in vectorized form. (*Note: if we had just one example in the batch the BCE Cost would simply be calculating the BCE Loss, just like the stochastic gradient descent example we went through earlier*)
+
+Next, let’s derive the partial derivatives of this vectorized Cost function.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-29.png" alt="Fig 29. Calculation of Jacobian on a simple example" />
+  <figcaption>Fig 29. Calculation of Jacobian on a simple example</figcaption>
+</figure>
+
+From this, we can generalize the partial derivative of the *Binary Cross-Entropy Cost* function.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-30.png" alt="Fig 30. The generalized derivative of the Cost Function" />
+  <figcaption>Fig 30. The generalized derivative of the Cost Function</figcaption>
+</figure>
+
+A very important consequence of the *Cost* function is that *since it calculates the average Loss across a batch of examples it* also *calculates the average of the gradient across the batch of examples, this helps in figuring out a less noisy general direction in which Loss across all examples decreases*. In contrast, *stochastic gradient descent(batch with only one example) gives a very noisy estimate of the gradients* because it uses only one example per training iteration to guide *gradient descent*.
+
+---
+
+For vectorized(batched) computations, we need to adjust the linear node(***z***) of the neural network, so that it accepts vectorized inputs and use the Cost function instead of the Loss function, also for the same reason.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-31.png" alt="Fig 31. Vectorized implementation of Z node" />
+  <figcaption>Fig 31. Vectorized implementation of Z node</figcaption>
+</figure>
+
+***Z*** node now computes the ***dot-product*** between appropriately sized weight matrix(***W***) and training data(***X***). The output of the ***Z*** node is now also a vector/matrix.
+
+Now we can set up our data(***X, W, b & Y***) for vectorized computation.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-32.png" alt="Fig 32. Data setup for batch(vectorized) processing" />
+  <figcaption>Fig 32. Data setup for batch(vectorized) processing</figcaption>
+</figure>
+
+We are now finally ready to perform forward and backward propagation using **Xₜᵣₐᵢₙ**, **Yₜᵣₐᵢₙ**, **W,** and **b**.
+
+*(NOTE: All the results below are rounded to 3 decimal points, just for brevity)*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-1.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-33.png" alt="Fig 33. Vectorized batch forward propagation on AND gate dataset" />
+  <figcaption>Fig 33. Vectorized batch forward propagation on AND gate dataset</figcaption>
+</figure>
+
+Through vectorized computations, we have performed forward propagation; calculating all the estimated probabilities for every example in the batch in one go.
+
+Now we can calculate the BCE Cost on these output estimated probabilities(P***̂*** ). *(Below, for legibility, I have highlighted the portions of the Cost function that are calculating the Loss on positive examples in blue and the negative examples in red)*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-34.png" alt="Fig 34. Calculation of Cost on the OR gate data(highlighted Loss in red for negative examples and blue for positive examples)" />
+  <figcaption>Fig 34. Calculation of Cost on the OR gate data(highlighted Loss in red for negative examples and blue for positive examples)</figcaption>
+</figure>
+
+So, the *Cost* with our current weights and bias is *approximately* **0.720**. Our goal now is to reduce this *Cost* using backpropagation and gradient descent. Let’s go through backpropagation step-by-step.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-2.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-35-a.png" alt="Fig 35.a. Vectorized Backpropagation on AND gate dataset" />
+  <figcaption>Fig 35.a. Vectorized Backpropagation on AND gate dataset</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-3.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-35-b.png" alt="Fig 35.b. Vectorized Backpropagation on AND gate dataset" />
+  <figcaption>Fig 35.b. Vectorized Backpropagation on AND gate dataset</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-4.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-35-c.png" alt="Fig 35.c. Vectorized Backpropagation on AND gate dataset" />
+  <figcaption>Fig 35.c. Vectorized Backpropagation on AND gate dataset</figcaption>
+</figure>
+
+And just like that, we have computed all the gradients with respect to the Cost function in one go for our entire batch of training examples, using vectorized computations. We can now perform *gradient descent* to update the weights and bias.
+
+*(For those confused with how ∂Cost/∂W and ∂Cost/∂b are being calculated in the last backpropagation step please refer to my* [*previous blog*](/blog/nothing-but-numpy-neural-networks-from-scratch) *where I break down this computation, more specifically why derivatives of dot products result in transposed matrices)*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-36.png" alt="Fig 36. Updating weights and bias using batch gradient descent" />
+  <figcaption>Fig 36. Updating weights and bias using batch gradient descent</figcaption>
+</figure>
+
+To check if we have done the right thing we can use the new weights and bias to perform another ***forward propagation*** and **calculate the new Cost.**
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-5.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-37.png" alt="Fig 37. Forward propagation with updated weights and bias" />
+  <figcaption>Fig 37. Forward propagation with updated weights and bias</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-38.png" alt="Fig 38. New Cost(highlighted Loss in red for negative examples and blue for positive examples)" />
+  <figcaption>Fig 38. New Cost(highlighted Loss in red for negative examples and blue for positive examples)</figcaption>
+</figure>
+
+With one training iteration, we have reduced the *Binary Cross Entropy Cost* from 0.720 to around **0.618.** We will need to perform multiple training iterations before we can converge to good weight and bias values that result in an overall low BCE *Cost*.
+
+*At this point, if you’d like to give it a go and perform the next backpropagation step yourself, as an exercise, here are the approximate gradients of Cost w.r.t weights(****W****) and bias(****b****) you should get(rounded to 3 d.p):*
+
+- ***∂Cost/∂W = [-0.002, 0.027]***
+- ***∂Cost/∂b =[0.239]***
+
+After about 5000 Epochs (*an epoch is complete when the neural net goes through all the training examples in a training iteration*) the Cost steadily decreases to about ***0.003***, our weights settle to around ***W = [10.678, 10.678],*** bias resolves to around ***b = [-16.186].*** We see by the *Cost Curve* below that the network has converged to a good set of parameters(*i.e* ***W*** & ***b***):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-39.png" alt="Fig 39. Plotting the Cost Curve(left) and the Decision Boundary(right)" />
+  <figcaption>Fig 39. Plotting the Cost Curve(left) and the Decision Boundary(right)</figcaption>
+</figure>
+
+The **Cost Curve**(or Learning Curve) is a neural network model’s performance over time. It is the Cost plotted after every few training iterations(or epochs). Note how quickly the *Cost* decreases initially but then asymptotes, recall ***Fig 21*** this is because initially the magnitude of the gradient is high but as we descend to flatter region near minimum *Cost* the magnitude of gradient decreases and further training only slightly improves the neural network parameters.
+
+After the neural net has been trained for 5000 epochs the predicted output probabilities(***p̂***) on Xₜᵣₐᵢₙ are:
+
+```python
+[[9.46258077e-08,  4.05463814e-03,  4.05463814e-03, 9.94323194e-01]]
+```
+
+Let’s break this down:
+
+1. for *x₁=0, x₂=0,* the predicted output is ***p̂≈ 9.46×10⁻ ⁸≈0.0000000946***
+2. for *x₁=0, x₂=1* the predicted output is ***p̂≈ 4.05×10⁻ ³≈0.00405***
+3. for *x₁=1, x₂=0* the predicted output is ***p̂≈ 4.05×10⁻ ³≈0.00405***
+4. for *x₁=1, x₂=1* the predicted output is ***p̂≈ 9.94×10⁻ ¹≈0.994***
+
+Recall, that the labels are ***y = [0, 0, 0, 1]. So,* only for the last example, the neural network is 99.4% confident that it belongs to the positive class for the rest it’s less than 1% confident**. Also, remember the probability equations from ***Fig.7***? ***P(1)=p̂*** *and* ***P(0)=1-p̂***, so the predicted probabilities(***p̂***) confirm our neural network knows what it is doing 👌.
+
+Now that we know that the neural network’s predicted ***probabilities*** are correct we need to define when the ***predicted class*** should be ***1*** and when it should be ***0*** *i.e. classify the examples based on these probabilities*. For this, we need to define a ***classification threshold (***also called ***decision threshold).*** What’s that? Let’s get into it
+
+---
+
+### Classification Threshold
+
+In binary classification tasks, it is common to ***classify all the predictions of a neural network to the positive class(1) if the estimated probability(p̂ ) is greater than a certain threshold, and similarly, to the negative class(0) if the estimated probability is below the threshold.***
+
+This can be mathematically written as follows:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-40.png" alt="Fig 40. Class prediction model" />
+  <figcaption>Fig 40. Class prediction model</figcaption>
+</figure>
+
+*The value of the threshold defines how stringent our model is in assigning an input to the positive class*. Suppose if the threshold is ***thresh=0,*** then all the input examples will be assigned to the positive class i.e predicted class***(ŷ)*** will always be ***ŷ=1***. Similarly, if ***thresh=1*** then all the input examples will be assigned to the negative class i.e predicted class***(ŷ)*** will always be ***ŷ=0.*** *(Recall, that the sigmoid activation function asymptotes at either ends so it may come very close to 0 or 1 but will never output completely 0 or 1)*
+
+The Sigmoid/Logistic function provides a natural threshold value for us. Recall ***Fig.8*** from earlier.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-41.png" alt="Fig 41. The natural threshold value from the sigmoid function" />
+  <figcaption>Fig 41. The natural threshold value from the sigmoid function</figcaption>
+</figure>
+
+So, with the natural threshold of ***0.5*** the classes can be predicted as follows:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-42.png" alt="Fig 42. Class prediction model with thresh=0.5" />
+  <figcaption>Fig 42. Class prediction model with thresh=0.5</figcaption>
+</figure>
+
+*How do we interpret this?* Well if the neural network is at least ***50%***(***0.5***) confident than the input belongs to the positive class(***1***) then we’ll assign it to the positive class(***ŷ=1***), otherwise we’ll assign it to the negative class(***ŷ=0***).
+
+Recall how we predicted in ***Fig.10*** the neural network could separate the two classes in the AND gate dataset by drawing a line that separates the positive class(green cross) and negative class(red crosses). Well, **the *location of that line* is defined by our threshold value.** Let’s see:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-43.png" alt="Fig 43. Deconstructing the inequality equation for class prediction" />
+  <figcaption>Fig 43. Deconstructing the inequality equation for class prediction</figcaption>
+</figure>
+
+Recall after training our weights and bias converged to around ***W = [10.678, 10.678]*** and ***b = [-16.186]***, respectively. Let’s plug these into the inequality derived in ***Fig. 43***, above.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-44.png" alt="Fig 44. Plugging in values into the inequality" />
+  <figcaption>Fig 44. Plugging in values into the inequality</figcaption>
+</figure>
+
+Further, realize this inequality gives us an equation of a line that separates our two classes:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-45.png" alt="Fig 45. Deriving equation of the line that forms the Decision Boundary" />
+  <figcaption>Fig 45. Deriving equation of the line that forms the Decision Boundary</figcaption>
+</figure>
+
+This equation of a line marked in ***Fig.45*** forms the **Decision Boundary**. The **Decision Boundary** is the line along which the neural network changes its prediction from positive to negative class and vice versa. *All points(****x₁,x₂****) that fall on the line have the estimated probability of exactly 50% i.e* ***p̂=0.5***, *all points above it have estimated probabilities of greater than 50% i.e* ***p̂ &gt;0.5,*** *and all points that fall below the line have estimated probabilities of less than 50% i.e* ***p̂&lt;0.5***.
+
+We can visualize the *decision boundary* by shading the area ***green*** where the neural network predicts the *positive class(1)* and ***red*** where the neural net predicts the *negative class(0)*.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-6.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-46.png" alt="Fig 46. (left) Decision Boundary with thresh=0.5. || (right) Decision Boundary shaded with thresh=0.5" />
+  <figcaption>Fig 46. (left) Decision Boundary with thresh=0.5. || (right) Decision Boundary shaded with thresh=0.5</figcaption>
+</figure>
+
+*In most cases, we can set a threshold value of 0.5 in binary classification problems.* So, what’s the take away after going this deep into understanding the threshold value? Should we just set it to 0.5 and forget about it? *NO! In some cases, you’d want the threshold value to be high, for example, if you’re creating a cancer detection neural network model you’d want your neural network to be very confident, maybe at least 95%(0.95) or even 99%(0.99), that the patient has cancer, because if they don’t they may have to go through toxic chemotherapy for nothing. On the other hand, a cat-detector neural net model may be set to a low threshold, around 0.5 or so, because even if the neural net misclassifies a cat, it’s just a funny accident, no harm no foul.*
+
+Now to drive home the concept of classification threshold let’s visualize its effect on the location of the decision boundary and the resultant accuracy of the neural network model:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-7.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-8.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-47-a.png" alt="Fig 47.a. thresh=0.000000001, all the values assigned to the positive class (accuracy = 25%)" />
+  <figcaption>Fig 47.a. thresh=0.000000001, all the values assigned to the positive class (accuracy = 25%)</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-9.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-10.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-47-b.png" alt="Fig 47.b. thresh=0.00001, only one point(red cross) correctly assigned to negative class, rest to the positive class (accuracy = 50%)" />
+  <figcaption>Fig 47.b. thresh=0.00001, only one point(red cross) correctly assigned to negative class, rest to the positive class (accuracy = 50%)</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-11.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-12.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-47-c.png" alt="Fig 47.c. thresh=0.5, all points correctly assigned their respective class(accuracy = 100%)" />
+  <figcaption>Fig 47.c. thresh=0.5, all points correctly assigned their respective class(accuracy = 100%)</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-13.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-14.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-47-d.png" alt="Fig 47.d. thresh=0.9999, all points assigned negative class (accuracy = 75%)" />
+  <figcaption>Fig 47.d. thresh=0.9999, all points assigned negative class (accuracy = 75%)</figcaption>
+</figure>
+
+After training the neural network in the above four figures I have plotted the decision boundary(left), the shaded decision boundary(middle) and the shortest distance of each point from the decision boundary(right) with the classification threshold ranging from *0.000000001 to 0.9999.*
+
+*The classification threshold is also a hyperparameter of the neural network* ***model*** which needs to tuned according to the problem at hand***.*** Classification threshold doesn’t affect the neural network directly(it does not change the weights and bias) it is only used to convert the output probabilities back to binary representations for our classes *i.e back to 1’s and 0's*.
+
+*On a final note,* ***the decision boundary is not the property of the dataset****, its shape(straight, curved, etc.) is the result of the weights and bias of the neural network and its location is the result of the value of the classification threshold.*
+
+---
+
+We’ve learned a lot up till now, right?😅 For the most part, we know almost everything about binary classification problems and how to solve them through neural networks. Unfortunately, I’ve got some bad news, our Binary Cross-Entropy Loss function has a serious computational flaw, it is very unstable in its current form😱.
+
+Don’t worry! With some simple maths, we’ll be able to solve this problem
+
+---
+
+## Implementation of Binary Cross-Entropy Function
+
+Let’s take another look at the *Binary Cross-Entropy(BCE) Loss* function:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-48.png" alt="Fig 48. The Binary Cross-Entropy Function" />
+  <figcaption>Fig 48. The Binary Cross-Entropy Function</figcaption>
+</figure>
+
+Note from the piecewise equation that all the characteristics for the *Binary Cross-Entropy Loss* function are dependent on the “**log”** function(recall, “**log”** here is the natural logarithm).
+
+Let’s plot the ***log*** function and visualize its characteristics:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-49.png" alt="Fig 49. The Natural Logarithm function plotted" />
+  <figcaption>Fig 49. The Natural Logarithm function plotted</figcaption>
+</figure>
+
+The **log** function in *Binary Cross-Entropy Loss* defines when the neural network pays a high penalty (***Loss→∞***) and when the neural network is correct (***Loss→0***). *The domain of the* ***log*** *function is* ***0&lt;x&lt;∞*** *and its range is unbounded* ***-∞&lt;log(x)&lt;∞*** *,* more importantly, as **x** gets closer and closer to zero(**x *→ 0***) the value of **log(x)** tends to ***negative infinity***(**log(x) *→ -∞***). So, small changes in values near zero have an extreme impact on the result of the *Binary Cross-Entropy Loss* function, further our computers can store numbers only to a certain floating-point precision, and when there are functions that tend to infinity they cause a [*numerical overflow*](https://stats.stackexchange.com/questions/1389/what-is-numerical-overflow)*(overflow is when the number is too big to be stored in computer memory and underflow is when the number is too small)* in computers. It turns out the *Binary Cross Entropy* function’s strength, the **log** function, is also its weakness making it unstable near small values.
+
+*This has a dire effect on the calculation of the gradients, too*. As the values get closer and closer to zero the gradient tends to approach ***infinity*** *making the gradient calculations also unstable*.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-50.png" alt="Fig 50. Near zero the gradient of the log function also becomes unstable" />
+  <figcaption>Fig 50. Near zero the gradient of the log function also becomes unstable</figcaption>
+</figure>
+
+Consider the following example:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-51.png" alt="Fig 51. Instability of the natural Log function making it unable to calculate the Cost" />
+  <figcaption>Fig 51. Instability of the natural Log function making it unable to calculate the Cost</figcaption>
+</figure>
+
+Similarly, when calculating the gradients for the above example:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-52.png" alt="Fig 52. Unable to calculate gradient because we used derivate of natural Log, which is also unstable" />
+  <figcaption>Fig 52. Unable to calculate gradient because we used derivate of natural Log, which is also unstable</figcaption>
+</figure>
+
+Now let’s see how we can fix this:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-53.png" alt="Fig 53. Making the Binary Cross-Entropy Loss Function stable" />
+  <figcaption>Fig 53. Making the Binary Cross-Entropy Loss Function stable</figcaption>
+</figure>
+
+We have successfully taken then natural logarithm(***log***) function out of the danger zone! ***The range of* “1+e⁻ ᶻ” *is greater than 1* (***i.e* **1+e⁻ ᶻ&gt;1) *resultantly the range of* “log” *function in BCE loss becomes greater than 0* (***i.e* **log(*1+e⁻* ᶻ)&gt;0).** The overall Binary Cross-Entropy function is no longer critically unstable.
+
+We can stop here but let’s go one step further and simplify the Loss function even more:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-54.png" alt="Fig 54. Further simplified Binary Cross-Entropy Loss Function" />
+  <figcaption>Fig 54. Further simplified Binary Cross-Entropy Loss Function</figcaption>
+</figure>
+
+We’ve significantly simplified the *Binary Cross-Entropy(BCE)* expression, but there is a problem with it. Can you guess it, looking at the curve for “**1+e⁻ ᶻ**” from ***Fig.53***?
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-55.png" alt="Fig 55. 1+e⁻ ᶻ unstable for negative values" />
+  <figcaption>Fig 55. 1+e⁻ ᶻ unstable for negative values</figcaption>
+</figure>
+
+The expression is “**1+e⁻ ᶻ**” **tends approach to infinity for negative values (***i.e* **1+e⁻ ᶻ →∞,** *when z&lt;0***)!** *So, unfortunately, this simplified expression overflows when a negative value is encountered.* Let’s try to fix this.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-56.png" alt="Fig 56. Second simplification of Binary Cross-Entropy Loss function" />
+  <figcaption>Fig 56. Second simplification of Binary Cross-Entropy Loss function</figcaption>
+</figure>
+
+Now with this “**eᶻ+1**” expression, we have solved the problem of the log function being unstable at negative values. Unfortunately, now we face the opposite problem, the new Binary Cross-Entropy Loss function is unstable for large positive values 😕 because “**eᶻ+1**” **tends to infinity for positive values (***i.e* **eᶻ+1 →∞,** *when z&gt;0***)!**
+
+Let’s visualize the two exponential expressions:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-57.png" alt="Fig 57. eᶻ+1(blue) and 1+e⁻ ᶻ(green) visualized" />
+  <figcaption>Fig 57. eᶻ+1(blue) and 1+e⁻ ᶻ(green) visualized</figcaption>
+</figure>
+
+We need to somehow combine these two simplified functions(in ***Fig.54*** & ***56***) into one the Binary Cross-Entropy(BCE) Function so that the overall Loss function is stable across all values, *positive and negative.*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-58.png" alt="Fig 58. Final stable and simplified Binary Cross -Entropy Function" />
+  <figcaption>Fig 58. Final stable and simplified Binary Cross -Entropy Function</figcaption>
+</figure>
+
+Let’s confirm that it is doing the right calculation on negative and positive values:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-59.png" alt="Fig 59. Example calculations with new stable Binary Cross-Entropy Function" />
+  <figcaption>Fig 59. Example calculations with new stable Binary Cross-Entropy Function</figcaption>
+</figure>
+
+Take a moment to understand this and try to piece it together with the piecewise *stable Binary Cross-Entropy Loss* function from ***Fig.58***.
+
+So, with some simple highschool level math, we have solved the numerical flaw in the basic Binary Cross-Entropy function and created a ***Stable Binary Cross-Entropy Loss and Cost function.***
+
+Note that the previous ***“unstable”*** ***Binary Cross-Entropy Loss function*** *took as inputs* label(***y***) and probabilities from the last sigmoid node(***p̂*** ) but the new ***Stable Binary Cross-Entropy Loss function*** *takes as input label(****y****) and the values from the last linear node(****z****). The same goes for the stable Cost function.*
+
+Now that we have a stable BCE *Loss* function and its corresponding BCE *Cost* function how do we find the stable gradient of the *Binary Cross-Entropy* function?
+
+*That answer has been in plain sight all along!*
+
+Recall the derivative of the *Binary Cross Entropy Loss* function(***Fig.15***):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-60.png" alt="Fig 60. The derivative of the Binary Cross Entropy Loss Function" />
+  <figcaption>Fig 60. The derivative of the Binary Cross Entropy Loss Function</figcaption>
+</figure>
+
+Also recall that during backpropagation this derivative flows into the Sigmoid node and multiplies with the local gradient at the sigmoid node, which is just the derivative of the Sigmoid function(***Fig.19.b.***):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-61.png" alt="Fig 61. The derivative of the Sigmoid function" />
+  <figcaption>Fig 61. The derivative of the Sigmoid function</figcaption>
+</figure>
+
+Some beautiful mathematics takes place as we multiply the two derivatives:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-62.png" alt="Fig 62. Reduction of derivative into simple expression after multiplying the two derivatives" />
+  <figcaption>Fig 62. Reduction of derivative into simple expression after multiplying the two derivatives</figcaption>
+</figure>
+
+So to calculate the derivative ***∂Loss/∂z*** we don’t even need to calculate the derivative of the Loss function or the derivative of the Sigmoid node instead we can just bypass the Sigmoid node and pass “***p̂-y***” as the upstream gradient to the last linear node(***z***)!
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-63.png" alt="Fig 63. Visualizing the forward and backward training step after optimization" />
+  <figcaption>Fig 63. Visualizing the forward and backward training step after optimization</figcaption>
+</figure>
+
+This optimization has two great benefits:
+
+1. We no longer have to use the unstable derivative of the Binary Cross-Entropy function.
+2. We also avoid multiplying with the ***saturating gradients*** of the Sigmoid function.
+
+What is a saturating gradient? Recall the Sigmoid function curve
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-62_1.png" alt="Fig 62 Sigmoid curve with flat gradients at either end" />
+  <figcaption>Fig 62 Sigmoid curve with flat gradients at either end</figcaption>
+</figure>
+
+At either end the Sigmoid curve becomes flat. This becomes a huge problem in neural networks when the weights increase or decrease by a large amount such that the output of the associated linear node(***z***) becomes very big or very small. In these cases, the gradient(i.e the local gradient at the sigmoid node) becomes zero or very close to zero. So, when an incoming upstream gradient is multiplied with a very small or a zero local gradient at the Sigmoid node, not much or none of the upstream gradient value is able to pass through.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-63_1.png" alt="Fig 63. A consequence of saturating gradients is that very little of the upstream gradient is able to pass through" />
+  <figcaption>Fig 63. A consequence of saturating gradients is that very little of the upstream gradient is able to pass through</figcaption>
+</figure>
+
+On a final note of this section, we could have found the derivative of the *stable Binary Cross-Entropy* function and reached the same conclusion, but I like the above explanation better as it helps us understand why we can bypass the last sigmoid node when backpropagating gradients in a binary classification neural network. For sake of completion I’ve also derived that below:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-64.png" alt="Fig 64. The derivative using the piecewise stable Binary Cross-Entropy Loss function" />
+  <figcaption>Fig 64. The derivative using the piecewise stable Binary Cross-Entropy Loss function</figcaption>
+</figure>
+
+---
+
+Now let’s apply all that we’ve learned onto the slightly complicated XOR gate data where we’d need a multilayer neural network*(a deep neural network)* as a simple straight line from a single layer neural network won’t cut(view my [previous post](/blog/nothing-but-numpy-neural-networks-from-scratch) for more information on this phenomena):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-65.png" alt="Fig 65 XOR data and plot" />
+  <figcaption>Fig 65 XOR data and plot</figcaption>
+</figure>
+
+To classify the data points of the XOR dataset we’ll use the following neural network architecture:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-66.png" alt="Fig 66. A 2-layer neural net architecture" />
+  <figcaption>Fig 66. A 2-layer neural net architecture</figcaption>
+</figure>
+
+*A layer in a neural network is any set of nodes at the same depth with tunable weights. Above neural network as two layers with tunable weights, the middle(hidden) and the last output layer.*
+
+Let’s expand out this 2-layer neural network before we proceed with forward and backward propagation:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-67.png" alt="Fig 67. Expanded 2-layer neural net" />
+  <figcaption>Fig 67. Expanded 2-layer neural net</figcaption>
+</figure>
+
+Now we are ready to perform ***batch gradient descent***, starting with forwarding propagation:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-15.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-68-a.png" alt="Fig 68.a. Forward propagation on 2-layer neural net" />
+  <figcaption>Fig 68.a. Forward propagation on 2-layer neural net</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-16.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-68-b.png" alt="Fig 68.b. Forward propagation on 2-layer neural net" />
+  <figcaption>Fig 68.b. Forward propagation on 2-layer neural net</figcaption>
+</figure>
+
+We can now calculate the ***stable*** *Cost*:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-69.png" alt="Fig 69. Calculation of Stable Binary Cross-Entropy Cost" />
+  <figcaption>Fig 69. Calculation of Stable Binary Cross-Entropy Cost</figcaption>
+</figure>
+
+After the calculation of *Cost*, we can now move on to backpropagation and improving the weights and biases. *Recall, we can bypass the last Sigmoid node with our optimization technique.*
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-17.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-70-a.png" alt="Fig 70.a. Backpropagation on the 2-layer neural net" />
+  <figcaption>Fig 70.a. Backpropagation on the 2-layer neural net</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-18.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-70-b.png" alt="Fig 70.b. Backpropagation on the 2-layer neural net" />
+  <figcaption>Fig 70.b. Backpropagation on the 2-layer neural net</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-19.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-70-c.png" alt="Fig 70.c. Backpropagation on the 2-layer neural net" />
+  <figcaption>Fig 70.c. Backpropagation on the 2-layer neural net</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-20.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-70-e.png" alt="Fig 70.e. Backpropagation on the 2-layer neural net" />
+  <figcaption>Fig 70.e. Backpropagation on the 2-layer neural net</figcaption>
+</figure>
+
+Man, that was a lot!😅 But now we know everything in-depth about a Binary Classification Neural Network. Finally, let’s move on to ***gradient descent*** and update our weights.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-71.png" alt="Fig 71. Batch gradient descent update" />
+  <figcaption>Fig 71. Batch gradient descent update</figcaption>
+</figure>
+
+At this point, if you would like to perform the next training iteration yourself and further your understanding, the following are the approximate gradients you should get(rounded to 3 d.p):
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-72.png" alt="Fig 72. Derivatives computed during 2ⁿᵈ training iteration" />
+  <figcaption>Fig 72. Derivatives computed during 2ⁿᵈ training iteration</figcaption>
+</figure>
+
+So, after 5000 epochs the *Cost* steadily decreases to about ***0.0017*** and we get the following *Learning Curve* and *Decision Boundary when the* ***classification threshold value set to 0.5****(in the coding section you can play around with the threshold value and see how it affects the decision boundary)* :
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-21.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-22.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-73.png" alt="Fig 73. (right) The learning curve, (middle) Decision Boundary, (left) Shaded Decision Boundary green positive label, red negative label" />
+  <figcaption>Fig 73. (right) The learning curve, (middle) Decision Boundary, (left) Shaded Decision Boundary green positive label, red negative label</figcaption>
+</figure>
+
+Before I conclude this section I want to answer some remaining questions, that might be bugging you:
+
+### 1- Isn’t this just Logistic Regression?
+
+**Yes**, **a neural network with just *one sigmoid neuron and no hidden layers*, as in *Fig.1*, is logistic regression**. A *single-sigmoid-neuron neural net/logistic regression* can classify simpler datasets that can be separated with just a straight line (like AND gate data). For a complicated dataset(such as XOR) ***feature engineering*** needs to be performed, by hand, to make a *single-sigmoid-neuron neural net/logistic regression work adequately*([explained in the previous post](/blog/nothing-but-numpy-neural-networks-from-scratch)).
+
+A multilayer neural network with multiple hidden layers and multiple neurons is called a deep neural network. A deep neural network can capture much more information about a dataset, than a single neuron, and can make classifications on complex datasets with little to no human intervention, the only caveat is that it needs much more training data than a simpler classification model such as a *single-sigmoid-neuron neural net/logistic regression.*
+
+Further, the Binary Cross-Entropy Cost function for a *single-sigmoid-neuron neural net/logistic regression is convex(u-shaped) with a guaranteed global minimum point.* On the other hand, for a deep neural network, the Binary Cross-Entropy Cost function is *not guaranteed to have a global minimum*; practically this does not have a serious effect on training deep neural nets and research has shown this can be mitigated with more training data.
+
+### 2- Can we use the raw output probabilities as/is?
+
+***Yes***, raw probabilities from a neural network can also be used, depending on the type of problem you are trying to solve. For example, you train a binary classification model to predict the probability of a car accident at a junction per day, ***P(accident ∣ day)***. Suppose the probability is ***P(accident ∣ day)=0.08.*** So in a year at that junction, we can expect:
+
+*P(accident ∣ day) × 365 = 0.08 × 365 = 29.2 accidents*
+
+### 3- How to find the optimal classification threshold?
+
+Accuracy is one metric to figure out the classification threshold. We would want a classification threshold that maximizes the accuracy of our model.
+
+Unfortunately in may real-world cases accuracy, alone, is a poor metric. This is especially evident in cases where the ***classes are skewed*** in a dataset(in simple terms, there are more examples of one class than the other). The AND gate, we saw earlier, also suffered from this problem; o*nly one example of positive class, the rest of the negative class*. If you go back and look at ***Fig.47.d.*** where we set the classification threshold so high(***0.9999***) that the model predicted the negative class for all our examples you’ll see that the model’s accuracy is still ***75%!*** *This sounds pretty acceptable, but looking at the data it isn’t.*
+
+Consider another case where you are training a cancer detection model, but your 1000 patient dataset has ***only one*** *example of a patient with cancer*. Now if the model always outputs a negative class(i.e **not-cancer, *0***), regardless of input, you’d have a classifier that has a ***99.9%*** accuracy on the dataset!
+
+So, to deal with real-world problems many data scientists use metrics that employ the use of ***Precision*** and ***Recall***.
+
+***Precision***: How many of the positive predictions did the classifier get correct? (True Positives / Total number of Predicted Positives)
+
+***Recall***: What proportion of positive examples was the classifier able to identify? (True Positives / Total number of Actual Positives)
+
+Both these metrics can be visualized through a 2×2 matrix called the “***confusion matrix***”:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-74.png" alt="Fig 74. The Confusion Matrix and metrics derived through it" />
+  <figcaption>Fig 74. The Confusion Matrix and metrics derived through it</figcaption>
+</figure>
+
+Tuning the classification threshold is a tug of war between *Precision* and *Recall*. If the *Precision* is high (i.e high classification threshold) *Recall* will be Low and vice versa. Understanding the *Precision vs. Recall trade-off* is a *topic* that is beyond the scope of the post and will be a topic of a future *Nothing but Numpy* blog.
+
+One common metric that most data scientists employ for tuning classification threshold, which combines both *Precision* and *Recall*, is the [***F1 score***](https://en.wikipedia.org/wiki/F1_score).
+
+---
+
+*For the sake of brevity, the following questions have been given their own short post and serve as a supplement to our discussion(click/tap on the question to go to its respective post)*
+
+---
+
+### 4- Where did this Binary Cross-Entropy Loss Function Come from?
+
+### 5- Why not just use the Mean Squared Error(MSE) function like your last blog? After all, you were able to solve the same examples using MSE.
+
+### 6- How do Tensorflow and Keras implement Binary Classification and the Binary Cross-Entropy function(Bonus)?
+
+This concludes **Part Ⅰ**.
+
+<figure>
+  <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="rafaykhan" data-color="#FFDD00" data-emoji=""  data-font="Inter" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
+  <figcaption>If you’re enjoying it</figcaption>
+</figure>
+
+
+---
+
+## Part Ⅱ: Coding a Modular Binary Classification Neural Network
+
+*This implementation builds upon the code from the previous post(for more details you may review the coding section of the* [*last post*](/blog/nothing-but-numpy-neural-networks-from-scratch) *or read the documentation in the code).*
+
+The code for the ***Linear Layer*** class remains the same.
+
+```python
+import numpy as np  # import numpy library
+from util.paramInitializer import initialize_parameters  # import function to initialize weights and biases
+
+
+class LinearLayer:
+    """
+        This Class implements all functions to be executed by a linear layer
+        in a computational graph
+
+        Args:
+            input_shape: input shape of Data/Activations
+            n_out: number of neurons in layer
+            ini_type: initialization type for weight parameters, default is "plain"
+                      Opitons are: plain, xavier and he
+
+        Methods:
+            forward(A_prev)
+            backward(upstream_grad)
+            update_params(learning_rate)
+
+    """
+
+    def __init__(self, input_shape, n_out, ini_type="plain"):
+        """
+        The constructor of the LinearLayer takes the following parameters
+
+        Args:
+            input_shape: input shape of Data/Activations
+            n_out: number of neurons in layer
+            ini_type: initialization type for weight parameters, default is "plain"
+        """
+
+        self.m = input_shape[1]  # number of examples in training data
+        # `params` store weights and bias in a python dictionary
+        self.params = initialize_parameters(input_shape[0], n_out, ini_type)  # initialize weights and bias
+        self.Z = np.zeros((self.params['W'].shape[0], input_shape[1]))  # create space for resultant Z output
+
+    def forward(self, A_prev):
+        """
+        This function performs the forwards propagation using activations from previous layer
+
+        Args:
+            A_prev:  Activations/Input Data coming into the layer from previous layer
+        """
+
+        self.A_prev = A_prev  # store the Activations/Training Data coming in
+        self.Z = np.dot(self.params['W'], self.A_prev) + self.params['b']  # compute the linear function
+
+    def backward(self, upstream_grad):
+        """
+        This function performs the back propagation using upstream gradients
+
+        Args:
+            upstream_grad: gradient coming in from the upper layer to couple with local gradient
+        """
+
+        # derivative of Cost w.r.t W
+        self.dW = np.dot(upstream_grad, self.A_prev.T)
+
+        # derivative of Cost w.r.t b, sum across rows
+        self.db = np.sum(upstream_grad, axis=1, keepdims=True)
+
+        # derivative of Cost w.r.t A_prev
+        self.dA_prev = np.dot(self.params['W'].T, upstream_grad)
+
+    def update_params(self, learning_rate=0.1):
+        """
+        This function performs the gradient descent update
+
+        Args:
+            learning_rate: learning rate hyper-param for gradient descent, default 0.1
+        """
+
+        self.params['W'] = self.params['W'] - learning_rate * self.dW  # update weights
+        self.params['b'] = self.params['b'] - learning_rate * self.db  # update bias(es)
+```
+
+The code for the Sigmoid Layer class also remains the same:
+
+```python
+import numpy as np  # import numpy library
+
+class SigmoidLayer:
+    """
+    This file implements activation layers
+    inline with a computational graph model
+
+    Args:
+        shape: shape of input to the layer
+
+    Methods:
+        forward(Z)
+        backward(upstream_grad)
+
+    """
+
+    def __init__(self, shape):
+        """
+        The consturctor of the sigmoid/logistic activation layer takes in the following arguments
+
+        Args:
+            shape: shape of input to the layer
+        """
+        self.A = np.zeros(shape)  # create space for the resultant activations
+
+    def forward(self, Z):
+        """
+        This function performs the forwards propagation step through the activation function
+
+        Args:
+            Z: input from previous (linear) layer
+        """
+        self.A = 1 / (1 + np.exp(-Z))  # compute activations
+
+    def backward(self, upstream_grad):
+        """
+        This function performs the  back propagation step through the activation function
+        Local gradient => derivative of sigmoid => A*(1-A)
+
+        Args:
+            upstream_grad: gradient coming into this layer from the layer above
+
+        """
+        # couple upstream gradient with local gradient, the result will be sent back to the Linear layer
+        self.dZ = upstream_grad * self.A*(1-self.A)
+```
+
+The Binary Cross-Entropy(BCE) Cost function(and its variants) are the main new addition to the code form last time.
+
+First, let’s look at the “unstable” Binary Cross-Entropy Cost function `compute_bce_cost(Y, P_hat)` , which takes as arguments the true labels(`Y`)and the probabilities from the last Sigmoid layer(`P_hat`). This simple version of the Cost function returns the *unstable* version of the Binary Cross-Entropy Cost(`cost`)and its derivative with respect to the probabilities(`dP_hat`):
+
+```python
+def compute_bce_cost(Y, P_hat):
+    """
+    This function computes Binary Cross-Entropy(bce) Cost and returns the Cost and its
+    derivative.
+    This function uses the following Binary Cross-Entropy Cost defined as:
+    => (1/m) * np.sum(-Y*np.log(P_hat) - (1-Y)*np.log(1-P_hat))
+
+    Args:
+        Y: labels of data
+        P_hat: Estimated output probabilities from the last layer, the output layer
+
+    Returns:
+        cost: The Binary Cross-Entropy Cost result
+        dP_hat: gradient of Cost w.r.t P_hat
+
+    """
+    m = Y.shape[1]  # m -> number of examples in the batch
+
+    cost = (1/m) * np.sum(-Y*np.log(P_hat) - (1-Y)*np.log(1-P_hat))
+    cost = np.squeeze(cost)  # remove extraneous dimensions to give just a scalar (e.g. this turns [[17]] into 17)
+
+    dP_hat = (1/m) * (-(Y/P_hat) + ((1-Y)/(1-P_hat)))
+
+    return cost, dP_hat
+```
+
+Now, let’s look at the stable version of Binary Cross-Entropy Cost function `compute_stable_bce_cost(Y, Z)` , which takes as argument the true labels(`Y`)and the output from the last Linear layer(`Z`). This Cost function returns the *stable* version of the Binary Cross-Entropy Cost(`cost`), as calculated by TensorFlow, and the derivative with respect to the last linear layer(`dZ_last`):
+
+```python
+def compute_stable_bce_cost(Y, Z):
+    """
+    This function computes the "Stable" Binary Cross-Entropy(stable_bce) Cost and returns the Cost and its
+    derivative w.r.t Z_last(the last linear node) .
+    The Stable Binary Cross-Entropy Cost is defined as:
+    => (1/m) * np.sum(max(Z,0) - ZY + log(1+exp(-|Z|)))
+    Args:
+        Y: labels of data
+        Z: Values from the last linear node
+
+    Returns:
+        cost: The "Stable" Binary Cross-Entropy Cost result
+        dZ_last: gradient of Cost w.r.t Z_last
+    """
+    m = Y.shape[1]
+
+    cost = (1/m) * np.sum(np.maximum(Z, 0) - Z*Y + np.log(1+ np.exp(- np.abs(Z))))
+    dZ_last = (1/m) * ((1/(1+np.exp(- Z))) - Y)  # from Z computes the Sigmoid so P_hat - Y, where P_hat = sigma(Z)
+
+    return cost, dZ_last
+```
+
+Finally, let’s also look at the way Keras implements the Binary Cross-Entropy Cost function. `compute_keras_like_bce_cost(Y, P_hat, from_logits=Flase` takes as arguments true labels(`Y`), the output from the last Linear layer(`Z`) or the last Sigmoid layer (`P_hat`) depending on the optional argument `from_logits`. If from `from_logtis=Flase` (default) then all assume `P_hat` contains probabilities that need to be converted to logits for computing the stable cost function. If from `from_logtis=True` then all assume `P_hat` contains output from the Linear node(`Z`) and stable cost function can be directly computed. This function returns the Cost(`cost`) and the derivative with respect to the last linear layer(`dZ_last`).
+
+```python
+def compute_keras_like_bce_cost(Y, P_hat, from_logits=False):
+    """
+    This function computes the Binary Cross-Entropy(stable_bce) Cost function the way Keras
+    implements it. Accepting either probabilities(P_hat) from the sigmoid neuron or values direct
+    from the linear node(Z)
+
+    Args:
+        Y: labels of data
+        P_hat: Probabilities from sigmoid function
+        from_logits: flag to check if logits are being provided or not(Default: False)
+
+    Returns:
+        cost: The "Stable" Binary Cross-Entropy Cost result
+        dZ_last: gradient of Cost w.r.t Z_last
+
+    """
+    if from_logits:
+        # assume that P_hat contains logits and not probabilities
+        return compute_stable_bce_cost(Y, Z=P_hat)
+
+    else:
+        # Assume P_hat contains probabilities. So make logits out of them
+
+        # First clip probabilities to stable range
+        EPSILON = 1e-07
+        P_MAX = 1- EPSILON  # 0.9999999
+
+        P_hat = np.clip(P_hat, a_min=EPSILON, a_max=P_MAX)
+
+        # Second, Convert stable probabilities to logits(Z)
+        Z = np.log(P_hat/(1-P_hat))
+
+        # now call compute_stable_bce_cost
+        return compute_stable_bce_cost(Y, Z)
+```
+
+*At this point, you should open up the* [*1_layer_toy_network_on_Iris_petals* ](https://github.com/RafayAK/NothingButNumPy/blob/master/Understanding_and_Creating_Binary_Classification_NNs/1_layer_toy_network_on_Iris_petals.ipynb)notebook from this[ *repository*](https://github.com/RafayAK/NothingButNumPy/tree/master/Understanding_and_Creating_Binary_Classification_NNs) *in a separate window and go over this blog and the notebook side-by-side.*
+
+We will use the Iris flower dataset, which happens to be one of the first datasets created for statistical analysis. The Iris dataset contains 150 examples of Iris flowers belonging to 3 species — Iris-setosa, Iris-versicolor and, Iris-virginica. Each example has 4 features — petal length, petal width, sepal length, and sepal width.
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-97.png" alt="Fig 97. Three Species of Iris Flowers (courtesy thegoodpython)" />
+  <figcaption>Fig 97. Three Species of Iris Flowers (courtesy thegoodpython)</figcaption>
+</figure>
+
+For our first Binary Classification neural network, we will create a 1-layer neural network, as in ***Fig.1***, to discriminate between Iris-virginica vs. others, using only petal length and petal width as input features. So let’s build our neural network layers:
+
+```python
+# define training constants
+learning_rate = 1
+number_of_epochs = 5000
+
+np.random.seed(48) # set seed value so that the results are reproduceable
+                   # (weights will now be initailzaed to the same pseudo-random numbers, each time)
+
+# Our network architecture has the shape: 
+#                       (input)--> [Linear->Sigmoid] -->(output)  
+
+
+#------ LAYER-1 ----- define output layer that takes in training data 
+Z1 = LinearLayer(input_shape=X_train.shape, n_out=1, ini_type='plain')
+A1 = SigmoidLayer(Z1.Z.shape)
+```
+
+Now we can move on to training our neural network:
+
+```python
+costs = []  # initially empty list, this will store all the costs after a certain number of epochs
+
+# Start training
+for epoch in range(number_of_epochs):
+
+    # ------------------------- forward-prop -------------------------
+    Z1.forward(X_train)
+    A1.forward(Z1.Z)
+    
+    # ---------------------- Compute Cost ----------------------------
+    cost, dZ1 = compute_stable_bce_cost(Y_train, Z1.Z)
+    # print and store Costs every 100 iterations and of the last iteration.
+    if (epoch % 100) == 0 or epoch == number_of_epochs - 1:
+        print("Cost at epoch#{}: {}".format(epoch, cost))
+        costs.append(cost)    
+
+    # ------------------------- back-prop ----------------------------        
+    Z1.backward(dZ1)
+      
+    # ----------------------- Update weights and bias ----------------
+    Z1.update_params(learning_rate=learning_rate)
+```
+
+*Notice that we are passing the derivative,* `dZ1`*, directly into the Linear layer* `Z1.backward(dZ1)` *bypassing the Sigmoid layer,* `A1`*, because of the optimization, we came up with earlier.*
+
+After running the loop for 5000 epochs, in the notebook, we see that the Cost steadily decreases to about *0.080.*
+
+```python
+Cost at epoch#4700: 0.08127062969243247Cost at epoch#4800: 0.08099585868475366Cost at epoch#4900: 0.08073032792428664Cost at epoch#4999: 0.08047611054333165
+```
+
+Resulting in the following Learning Curve and Decision Boundary:
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-24.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/image-25.png" alt="" />
+  
+</figure>
+
+<figure>
+  <img src="/media/blog/nothing-but-numpy-binary-classification-from-scratch/fig-100.png" alt="Fig 100. The Learning Curve, Decision Boundary, and Shaded Decision Boundary." />
+  <figcaption>Fig 100. The Learning Curve, Decision Boundary, and Shaded Decision Boundary.</figcaption>
+</figure>
+
+Our model’s accuracy on the training data is:
+
+```python
+The predicted outputs of first 5 examples: [[ 0.  0.  1.  0.  1.]]The predicted prbabilities of first 5 examples: [[ 0.012  0.022  0.542  0.     0.719]]
+```
+
+```python
+The accuracy of the model is: 96.0%
+```
+
+Check out other notebooks in the[ ***repository***](https://github.com/RafayAK/NothingButNumPy/tree/master/Understanding_and_Creating_Binary_Classification_NNs). We’ll be building upon the things we learned in this blog in future *Nothing but NumPy* blogs, therefore, it would behoove you to create the layer classes(if you haven’t before) and the Binary Cross-Entropy Cost functions from memory as an exercise and try recreating the AND gate example from ***Part*** ***Ⅰ****.*
+
+This concludes the blog🙌🎉. Thank you for taking the time out to read this post, I hope you enjoyed.
+
+For any questions feel free to reach out to me on [Twitter](https://twitter.com/RafayAK) [@RafayAK](https://twitter.com/RafayAK)
+
+---
+
+## This blog would not have been possible without the following resources and people:
+
+- TensorFlow [Documentation ](https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits)and [GitHub](https://github.com/tensorflow/tensorflow/blob/r2.0/tensorflow/python)(especially [this](https://github.com/tensorflow/tensorflow/blob/1cf0898dd4331baf93fe77205550f2c2e6c90ee5/tensorflow/python/ops/nn_impl.py#L112))
+- Keras [Documentation ](https://www.tensorflow.org/api_docs/python/tf/keras/losses/BinaryCrossentropy)and GitHub(especially [this](https://github.com/tensorflow/tensorflow/blob/r2.0/tensorflow/python/keras/losses.py#L348-L406) and [this](https://github.com/tensorflow/tensorflow/blob/1cf0898dd4331baf93fe77205550f2c2e6c90ee5/tensorflow/python/keras/metrics.py#L2493))
+- [Sait Celebi](http://www.linkedin.com/in/saitcelebi)’ s [blogs](http://saitcelebi.com/)
+- Google’s [ML crash-course](https://developers.google.com/machine-learning/crash-course)
+- [James D. McCaffrey](https://www.linkedin.com/in/james-mccaffrey-38b88b79/)’s [blog](https://jamesmccaffrey.wordpress.com/2013/11/05/why-you-should-use-cross-entropy-error-instead-of-classification-error-or-mean-squared-error-for-neural-network-classifier-training/)
+- Will Wolf’s( [@willwolf_](https://twitter.com/willwolf_?s=20)) amazing [post on deriving functions through MLE](http://willwolf.io/2017/05/18/minimizing_the_negative_log_likelihood_in_english/)
+- Andrej Karpathy’s([**@**karpathy](https://twitter.com/karpathy)) Stanford [course](http://cs231n.stanford.edu/)
+- Christopher Olah’s([**@**ch402](https://twitter.com/ch402)) [blog](https://colah.github.io/)s
+- Andrew Ng([@AndrewYNg](http://twitter.com/AndrewYNg)) and his Coursera courses on [deep learning](https://www.coursera.org/specializations/deep-learning) and [machine learning](https://www.coursera.org/learn/machine-learning)
+- Ian Goodfellow([**@**goodfellow_ian](https://twitter.com/goodfellow_ian)) and his amazing [book](https://www.deeplearningbook.org/)
+- [Reddit ](https://www.reddit.com/r/MachineLearning/comments/8im9eb/d_crossentropy_vs_meansquared_error_loss/)and [StackExchange](https://stats.stackexchange.com/questions/217798/using-mse-instead-of-log-loss-in-logistic-regression)
+- Berkeley CS294 [lecture notes](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/classes/cs294_f99/notes/lec3/lec3.pdf)
+- Stanford CS229 [lecture notes](http://cs229.stanford.edu/notes/cs229-notes1.pdf)
+- Stanford [Probabilistic Graphical Models lecture](https://www.coursera.org/lecture/probabilistic-graphical-models-3-learning/maximum-likelihood-estimation-KzlS4)
+- **Finally, Hassan-uz-Zaman(**[**@OKidAmnesiac**](https://twitter.com/OKidAmnesiac)**) and Hassaan Tauqeer(**[**@_hassaantauqeer**](https://twitter.com/_hassaantauqeer?s=20)**) for invaluable feedback.**

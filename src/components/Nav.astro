@@ -1,0 +1,36 @@
+---
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.tsx';
+import { href } from '../lib/utils';
+
+const links = [
+  { label: 'Projects', path: '/#projects' },
+  { label: 'Research', path: '/#research' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'Résumé', path: '/media/resume.pdf' },
+];
+---
+
+<header
+  class="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-5"
+>
+  <a href={href('/')} class="flex items-center text-ink no-underline" aria-label="Rafay">
+    <Logo class="h-12 w-auto text-ink hover:text-accent transition-colors duration-300" />
+  </a>
+
+  <nav class="flex items-center gap-5 text-body">
+    {
+      links.map((l) => (
+        <a
+          href={l.path.startsWith('/#') ? href('/') + l.path.slice(1) : href(l.path)}
+          class="text-ink no-underline hover:underline"
+          target={l.path.endsWith('.pdf') ? '_blank' : undefined}
+          rel={l.path.endsWith('.pdf') ? 'noopener noreferrer' : undefined}
+        >
+          {l.label}
+        </a>
+      ))
+    }
+    <ThemeToggle client:load />
+  </nav>
+</header>

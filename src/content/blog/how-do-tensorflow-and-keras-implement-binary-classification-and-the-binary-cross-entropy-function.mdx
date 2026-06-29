@@ -1,0 +1,58 @@
+---
+title: "How do Tensorflow and Keras implement Binary Classification and the Binary Cross-Entropy function?"
+description: "Figuring out how TensorFlow and Keras implement binary classification and the binary cross-entropy function."
+pubDate: 2019-11-14
+tags: ["tensorflow", "keras", "binary-classification", "deep-learning"]
+---
+
+> [!INFO]
+> This blog was originally published on [Medium](https://rafayak.medium.com/how-do-tensorflow-and-keras-implement-binary-classification-and-the-binary-cross-entropy-function-e9413826da7)
+ 
+*Supplementary part of the blog post “*[*Nothing but NumPy: Understanding & Creating Binary Classification Neural Networks with Computational Graphs from Scratch*](/blog/nothing-but-numpy-binary-classification-from-scratch)*”*
+
+---
+
+## TensorFlow:
+
+TensorFlow implements the Binary Cross-Entropy function in a numerically stable form like this:
+
+<figure>
+  <img src="/media/blog/how-do-tensorflow-and-keras-implement-binary-classification-and-the-binary-cross-entropy-function/fig-1.png" alt="Fig 1. Final stable and simplified Binary Cross -Entropy Function" />
+  <figcaption>Fig 1. Final stable and simplified Binary Cross -Entropy Function</figcaption>
+</figure>
+
+[*See the main blog post on how to derive this*](/blog/nothing-but-numpy-binary-classification-from-scratch)*.*
+
+In TensorFlow, the Binary Cross-Entropy Loss function is named `sigmoid_cross_entropy_with_logits` .
+
+You may be wondering what are ***logits***? Well ***logits***, as you might have guessed from our exercise on stabilizing the Binary Cross-Entropy function, are the values from ***z***(the linear node). *Technically, in mathematics, logits are functions that map a function with outputs in the range [1, 0] to the range (-∞, ∞), since* ***z*** *node just computes a linear function which is unbounded(i.e range is from -∞ to ∞) before its range is squashed to (0,1) by the sigmoid function, it is in context of a neuron a* ***logit****. Secondly, the inverse of the Sigmoid function is also called a* ***logit****, so in this sense, the linear node* ***z*** *again fulfills the properties of a* ***logit****. (Note: in math notation square brackets imply inclusive boundary whereas round brackets imply exclusive boundaries).*
+
+<figure>
+  <img src="/media/blog/how-do-tensorflow-and-keras-implement-binary-classification-and-the-binary-cross-entropy-function/fig-2.png" alt="Fig 2. Deriving the inverse of Sigmoid/Logistic function, called logit" />
+  <figcaption>Fig 2. Deriving the inverse of Sigmoid/Logistic function, called logit</figcaption>
+</figure>
+
+While training Binary Classification neural networks in TensorFlow, we don’t add the last Sigmoid Node until after training has ended.
+
+<figure>
+  <img src="/media/blog/how-do-tensorflow-and-keras-implement-binary-classification-and-the-binary-cross-entropy-function/fig-3.png" alt="Fig 3. The architecture of a Binary Classifier in TensorFlow, while training and after training" />
+  <figcaption>Fig 3. The architecture of a Binary Classifier in TensorFlow, while training and after training</figcaption>
+</figure>
+
+## Keras:
+
+Keras is a wrapper around Tensorflow and makes using Tensorflow a breeze through its convenience functions. Surprisingly, Keras has a Binary Cross-Entropy function simply called `BinaryCrossentropy`, that can accept either logits (i.e values from last linear node, ***z***) or probabilities from the last Sigmoid node. How does Keras do this? Well, Keras's documentation is particularly confusing and misleading in this instance. Since Keras uses TensorFlow as a backend and TensorFlow does not provide a Binary Cross-Entropy function that uses probabilities from the Sigmoid node for calculating the Loss/Cost this is quite a conundrum for new users. So, let’s figure out how Keras performs this feat.
+
+1. If `from_logits=True` is passed as an argument to the `BinaryCrossentropy` function, then Keras assumes that the neural network architecture is in the format that TensorFlow accepts for training. In this instance, Keras calls TensorFlow’s `sigmoid_cross_entropy_with_logits` directly.
+2. If `from_logits=False` (Default), then Keras assumes the neural net architecture is not in a form accepted by TensorFlow. So Keras has to jump through a bunch of hoops to make the probability values coming out of the last Sigmoid node into Logits using the function defined in ***Fig.2.*** Then it can call the `sigmoid_cross_entropy_with_logits,` passing in the estimated Logits from probabilities. Let’s see how Keras does this by continuing the example from [***Fig.51*** *in the blog*](/blog/nothing-but-numpy-binary-classification-from-scratch), where previously the u*nstable Binary Cross-Entropy Cost* was ***nan (not a number).***
+
+<figure>
+  <img src="/media/blog/how-do-tensorflow-and-keras-implement-binary-classification-and-the-binary-cross-entropy-function/fig-3_1.png" alt="Fig 3. Kera’s way of creating a sable BCE Cost function" />
+  <figcaption>Fig 3. Kera’s way of creating a sable BCE Cost function</figcaption>
+</figure>
+
+Implementation of this Keras version of the Binary Cross Entropy Cost function will also be in the coding section of the [blog](/blog/nothing-but-numpy-binary-classification-from-scratch).
+
+***Note:*** *If you find slight discrepancies between the output of Cost value in our implementation vs. Tensorflow the reason is that Tensorflow uses 32-bit integers and 32-bit floats as default (mostly to save space), unlike Numpy which uses 64-bit by default. TensorFlow dynamically changes to 64-bit if a number overflows.*
+
+For any questions feel free to reach out to me on [Twitter](https://twitter.com/RafayAK) [@RafayAK](https://twitter.com/RafayAK) and check out the rest of the post on “[***binary classification***](/blog/nothing-but-numpy-binary-classification-from-scratch)”.

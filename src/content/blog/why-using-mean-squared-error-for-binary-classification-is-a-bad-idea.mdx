@@ -1,0 +1,53 @@
+---
+title: "Why using Mean Squared Error(MSE) cost function for Binary Classification is a bad idea?"
+description: "Deriving intuition on why MSE is a bad choice for binary classification problems."
+pubDate: 2019-11-14
+tags: ["math", "binary-classification", "mse", "loss-functions", "deep-learning"]
+---
+
+> [!INFO]
+> This blog was originally published on [Medium](https://medium.com/data-science/why-using-mean-squared-error-mse-cost-function-for-binary-classification-is-a-bad-idea-933089e90df7)
+
+
+*Supplementary part of the blog post “*[*Nothing but NumPy: Understanding & Creating Binary Classification Neural Networks with Computational Graphs from Scratch*](/blog/nothing-but-numpy-binary-classification-from-scratch)*”*
+
+---
+
+There are two reasons why Mean Squared Error (MSE) is a bad choice for binary classification problems:
+
+***First****, using MSE means that we assume that the underlying data has been generated from a normal distribution (a bell-shaped curve)*. In Bayesian terms this means we assume a [***Gaussian prior***](https://en.wikipedia.org/wiki/Conjugate_prior). While in reality, a dataset that can be classified into two categories (i.e binary) is not from a normal distribution but a[ *Bernoulli distribution*](https://en.wikipedia.org/wiki/Bernoulli_distribution) (Check out the answer to “[*Where did the Binary Cross-Entropy Loss Function come from?*](/blog/where-did-binary-cross-entropy-loss-function-come-from)” for more details and also for an intro to maximum likelihood estimation).
+
+If we use maximum likelihood estimation (MLE), assuming that the data is from a normal distribution (a wrong assumption, by the way), we get the MSE as a Cost function for optimizing our model.
+
+<figure>
+  <img src="/media/blog/why-using-mean-squared-error-for-binary-classification-is-a-bad-idea/fig-1.png" alt="Fig 1. The Normal Distribution of the observed target/label value" />
+  <figcaption>Fig 1. The Normal Distribution of the observed target/label value</figcaption>
+</figure>
+
+<figure>
+  <img src="/media/blog/why-using-mean-squared-error-for-binary-classification-is-a-bad-idea/fig-2.png" alt="Fig 2. Deriving MSE through MLE" />
+  <figcaption>Fig 2. Deriving MSE through MLE</figcaption>
+</figure>
+
+***Secondly***, the MSE function is non-convex for binary classification. In simple terms, if a binary classification model is trained with MSE Cost function, it is *not guaranteed* to minimize the Cost function. This is because MSE function expects real-valued inputs in range *(-∞, ∞),* while binary classification models output probabilities in range (0,1) through the sigmoid/logistic function. Let’s visualize:
+
+<figure>
+  <img src="/media/blog/why-using-mean-squared-error-for-binary-classification-is-a-bad-idea/fig-3.png" alt="Fig 3. Non-convexity of MSE when output is from a Sigmoid/Logistic function" />
+  <figcaption>Fig 3. Non-convexity of MSE when output is from a Sigmoid/Logistic function</figcaption>
+</figure>
+
+When the MSE function is passed a value that is unbounded a nice U-shaped (convex) curve is the result where there is a clear minimum point at the target value (***y***). On the other hand, when a bounded value from a Sigmoid function is passed to the MSE function the result is not convex; on one side the function is concave while on the other side the function convex and no clear minimum point. So, if by accident a binary classification neural network is initialized with weights which are large in magnitude such that it lands on the concave part of the MSE Cost function gradient descent will not work and consequently, weights may not update or improve very slowly(t[ry this out in coding section](/blog/nothing-but-numpy-binary-classification-from-scratch#id=%2298ff%22)). This is one of the reasons why neural networks should be carefully initialized with small values when training.
+
+<figure>
+  <img src="/media/blog/why-using-mean-squared-error-for-binary-classification-is-a-bad-idea/fig-4.png" alt="Fig 4. MSE convex on one side while concave on the other when using outputs from a Sigmoid/Logistic function" />
+  <figcaption>Fig 4. MSE convex on one side while concave on the other when using outputs from a Sigmoid/Logistic function</figcaption>
+</figure>
+
+*On a final note, MSE is a good choice for a Cost function when we are doing Linear Regression (i.e fitting a line through data for extrapolation).* ***In the absence of any knowledge of how the data is distributed assuming normal/gaussian distribution is perfectly reasonable.***
+
+<figure>
+  <img src="/media/blog/why-using-mean-squared-error-for-binary-classification-is-a-bad-idea/image-1.jpeg" alt="Courtesy Nas Mouti" />
+  <figcaption>Courtesy Nas Mouti</figcaption>
+</figure>
+
+For any questions feel free to reach out to me on [Twitter](https://twitter.com/RafayAK) [@RafayAK](https://twitter.com/RafayAK) and check out the rest of the post on “[binary classification](/blog/nothing-but-numpy-binary-classification-from-scratch)”.

@@ -56,6 +56,27 @@ const ogImage = new URL(href(image), Astro.site || Astro.url.origin);
       })();
     </script>
 
+    <!-- Google Analytics Tag (Production only) -->
+    {
+      import.meta.env.PROD && (
+        <>
+          <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-9LFP0QB0H2"></script>
+          <script is:inline>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+              window.dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            document.addEventListener('astro:page-load', () => {
+              gtag('config', 'G-9LFP0QB0H2', {
+                page_path: window.location.pathname,
+              });
+            });
+          </script>
+        </>
+      )
+    }
+
     <ClientRouter />
   </head>
 

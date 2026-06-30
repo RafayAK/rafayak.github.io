@@ -1,12 +1,7 @@
 # rafayak.github.io
-=======
-# rafayak.github.com
 
-Personal site for Rafay — AI Engineer. Portfolio + blog, built with Astro.
 
-Warm letterpress aesthetic (Lora, cream canvas, warm dark mode), a markdown blog
-with animated squiggly dividers and a pencil reading-rail, hover link previews,
-and an ambient music toggle.
+My Personal site  — Portfolio + blog, built with Astro.
 
 ## Develop
 

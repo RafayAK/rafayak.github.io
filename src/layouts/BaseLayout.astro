@@ -49,9 +49,13 @@ const ogImage = new URL(href(image), Astro.site || Astro.url.origin);
     <script is:inline>
       (function () {
         var t = localStorage.getItem('theme');
+        // Default to light mode (ignoring system preferences)
+        var d = t === 'dark';
+        /* Old implementation (fallback to system preference):
         var d = t
           ? t === 'dark'
           : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        */
         document.documentElement.classList.toggle('dark', d);
       })();
     </script>
@@ -98,9 +102,13 @@ const ogImage = new URL(href(image), Astro.site || Astro.url.origin);
     <script>
       function applyTheme() {
         const t = localStorage.getItem('theme');
+        // Default to light mode (ignoring system preferences)
+        const d = t === 'dark';
+        /* Old implementation (fallback to system preference):
         const d = t
           ? t === 'dark'
           : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        */
         document.documentElement.classList.toggle('dark', d);
       }
       function initAnimations() {
